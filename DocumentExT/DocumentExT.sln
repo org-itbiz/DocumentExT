@@ -5,6 +5,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WebUI", "WebUI", "{78989681
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Net.WebUI", "WebUI\Net.WebUI\Net.WebUI.csproj", "{9FA407EA-95A4-4AD1-BF88-38263CB6F5BE}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Library", "Library", "{435BE2A1-0BC5-434E-9749-84285D42892D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "D3Model", "Library.3DModel\D3Model.csproj", "{CC6811C1-E0B3-4103-B82A-A80246A782F2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,11 +19,16 @@ Global
 		{9FA407EA-95A4-4AD1-BF88-38263CB6F5BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9FA407EA-95A4-4AD1-BF88-38263CB6F5BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9FA407EA-95A4-4AD1-BF88-38263CB6F5BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC6811C1-E0B3-4103-B82A-A80246A782F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC6811C1-E0B3-4103-B82A-A80246A782F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC6811C1-E0B3-4103-B82A-A80246A782F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC6811C1-E0B3-4103-B82A-A80246A782F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9FA407EA-95A4-4AD1-BF88-38263CB6F5BE} = {78989681-7BC5-47BD-AAD2-FFCACE8AAD91}
+		{CC6811C1-E0B3-4103-B82A-A80246A782F2} = {435BE2A1-0BC5-434E-9749-84285D42892D}
 	EndGlobalSection
 EndGlobal
