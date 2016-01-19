@@ -1,6 +1,250 @@
-﻿@{
+﻿@model Makersn.Models.ArticleDetailT
+@{
     ViewBag.Title = "Viewer";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    IList<Makersn.Models.ArticleFileT> fileList = ViewBag.Files;
+    
+    int index = 0;
+    int setNum = 0;
+    int sildeNum = 0;
 }
 
-<h2>Viewer</h2>
+<!-- contWrap -->
+<div class="contWrap">
+    <!-- DetailWrap -->
+    <div class="detailWrap">
+
+        <!-- LeftCont -->
+        <div class="leftCont">
+
+            <div class="detailSlide">
+                <div class="mainBigImg">
+                    <ul class="bxslider">
+                        @foreach (Makersn.Models.ArticleFileT file in fileList)
+                        {
+                            file.ImgName = file.ImgName != null ? file.ImgName : file.Rename;
+
+                            string ImgPath = ViewBag.ArticleImgUrl + file.ImgName;
+                            string filePath = ViewBag.Article3DUrl + file.Rename;
+                            string jsUrl = ViewBag.ArticleJsUrl + file.Rename + ".json";
+                            <li style="display: none">
+                                <img class="lazy-load" src="@ImgPath" />
+
+                                @{if (setNum == 0)
+                                  {
+                                    <div id="viewer">
+                                        @*<iframe src="#" id="viewer_frame" width="630" height="470" border="0" frameborder="0" scrolling="no"></iframe>*@
+                                    </div>
+                                  }
+                                }
+                                @if (file.FileType.ToLower() == "stl")
+                                {
+                                    <a href="#none" class="viewer3d" data-file="@filePath" data-js="@jsUrl" data-ext="@file.Ext">3D View</a>
+                                }
+
+                            </li>
+                                setNum++;
+
+                                if (Model.MainImage == file.No)
+                                {
+                                    sildeNum = setNum;
+                                }
+
+                        }
+                    </ul>
+                    <div class="thumb3dImg">
+                        <img src="/Content/images/common/loading_bar.gif" alt="로딩중" />
+                    </div>
+                </div>
+                <input type="hidden" id="sildeNum" value="@(sildeNum - 1)" />
+
+                <div class="thumbArea">
+                    <div id="bx-pager" style="display: none">
+                        @foreach (Makersn.Models.ArticleFileT file in ViewBag.Files)
+                        {
+                            string ThumbImgPath = ViewBag.ArticleImgUrl + file.ImgName;
+                            <a data-slide-index="@index" href="javascript:void(0);">
+                                @*<img class="lazy-load" data-original="@ThumbImgPath" />*@
+                                <img src="@ThumbImgPath" />
+                            </a>
+                            index++;
+                        }
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- About -->
+            <div class="aboutZone" id="aboutZone">
+                <ul class="title">
+                    <li id="infoTit" class="infoTit on"><a href="javascript:void(0);" onclick="goDesign()">디자인 소개</a></li>
+                    <li id="downTit" class="downTit"><a href="javascript:void(0);" onclick="goDownFile()">파일 다운로드</a></li>
+                </ul>
+                <div class="txt">
+                    <p style="word-break: break-all">
+                        @Html.Raw(Model.Contents)
+                        @if (Model.VideoUrl != null && Model.VideoUrl != "")
+                        {
+                            <br />
+                            <iframe width="606" height="340" src="@Model.VideoUrl" frameborder="0" allowfullscreen></iframe> 
+                        }
+                    </p>
+                </div>
+
+
+            </div>
+            <!-- //About -->
+
+        </div>
+        <!-- //LeftCont -->
+    </div>
+</div>
+
+
+@section Scripts{
+@Scripts.Render("~/bundles/threejs")
+@Scripts.Render("~/bundles/d3loader")
+
+    <script src="@Url.Content("~/Scripts/jquery.bxslider.min.js")"></script>
+    
+    <script type="text/javascript">
+
+
+
+        //3dviewer 보이기
+        $('.viewer3d').on('click', function (e) {
+            e.preventDefault();
+            var thingiview = null;
+
+            $('.thumb3dImg').show();
+            //console.log($('.thumb3dImg'));
+            var view = $('#viewer');
+            view.find('canvas').empty();
+            $(this).siblings('img').hide();
+            $(this).parent('li').append(view);
+            $(this).siblings('#viewer').show();
+
+            //js파일 이용
+            var js = $(this).attr('data-js');
+            jQuery('html, body').animate({ scrollTop: 0 }, 300);
+
+            var ThreeJsonLoader = new THREE.JSONLoader(true);
+            ThreeJsonLoader.statusDomElement.style.left = "0px";
+            ThreeJsonLoader.statusDomElement.style.width = "auto";
+
+            document.body.appendChild(ThreeJsonLoader.statusDomElement);
+            ThreeLoadCallback = function (geometry, materials) {
+                thingiview.addModel(geometry);
+                document.body.removeChild(ThreeJsonLoader.statusDomElement);
+                $('.thumb3dImg').hide();
+            };
+
+            thingiview = new Thingiview('viewer');
+            //thingiview.resize(630, 472);
+            ThreeJsonLoader.load(js, ThreeLoadCallback);
+            //여기까지
+
+            ////stl파일 이용
+            //var filePath = $(this).attr('data-file');
+            //var fileExt = $(this).attr('data-ext');
+
+            //thingiview = new Thingiview('viewer');
+
+            //thingiview.resize(630, 472);
+
+            //switch (fileExt) {
+            //    case "stl":
+            //        var stlLoader = new THREE.STLLoader();
+            //        stlLoader.load(filePath, function (geometry) {
+            //            thingiview.addModel(geometry);
+            //            $('.thumb3dImg').hide();
+            //        });
+            //        break;
+            //    case "obj":
+            //        var objTest = new THREE.OBJLoader();
+            //        objTest.load(filePath, function (geometry) {
+            //            console.log(geometry);
+            //            thingiview.addModel(geometry);
+            //            $('.thumb3dImg').hide();
+            //        });
+            //        break;
+            //}
+
+            var thingiviewanimate = function () {
+                if (thingiview != undefined) {
+                    requestAnimationFrame(thingiviewanimate);
+                    thingiview.render();
+                }
+            }
+            thingiviewanimate();
+
+        });
+
+        function isIE() { //ie?  
+            if (Object.hasOwnProperty.call(window, "ActiveXObject") && !window.ActiveXObject)
+                return true;
+            else
+                return false;
+        };
+        
+        $(document).ready(function () {
+            $("#bx-pager").removeAttr("style");
+            slideNumber = $("#sildeNum").val();
+
+            $('.mainBigImg .bxslider').bxSlider({
+                mode: 'fade',
+                pagerCustom: '#bx-pager',
+                speed: 1,
+                startSlide: slideNumber   // 초기 슬라이드 지정번호
+            });
+
+            $('.thumbArea #bx-pager').bxSlider({
+                slideWidth: 80,
+                minSlides: 2,
+                maxSlides: 6,
+                slideMargin: 11,
+                infiniteLoop: !1
+            });
+
+            $('.thumbArea #bx-pager a').on('click', function () {
+                $('#viewer').hide();
+                $('.viewer3d').siblings('img').show();
+                //$('#viewer div').fadeOut();
+            });
+
+            $('#bx-pager a').on('click', function () {
+                thingiview = null;
+
+            })
+            //$(".gnbArea").addClass("bdA_no");
+
+            // 브라우저체크하여 안내
+
+            var is_chrome = navigator.userAgent.indexOf('Chrome') > -1;
+            var is_safari = navigator.userAgent.indexOf("Safari") > -1;
+            var heightSafari = 0;
+            if ((is_chrome) && (is_safari)) { is_safari = false; }
+
+            var Browser = {
+                chk: navigator.userAgent.toLowerCase()
+            }
+
+            Browser = {
+                ie: Browser.chk.indexOf('msie') != -1,
+                ie6: Browser.chk.indexOf('msie 6') != -1,
+                ie7: Browser.chk.indexOf('msie 7') != -1,
+                ie8: Browser.chk.indexOf('msie 8') != -1,
+                ie9: Browser.chk.indexOf('msie 9') != -1,
+                ie10: Browser.chk.indexOf('msie 10') != -1,
+                opera: !!window.opera,
+                safari: Browser.chk.indexOf('safari') != -1,
+                safari3: Browser.chk.indexOf('applewebkir/5') != -1,
+                mac: Browser.chk.indexOf('mac') != -1,
+                chrome: Browser.chk.indexOf('chrome') != -1,
+                firefox: Browser.chk.indexOf('firefox') != -1
+            }
+        })
+    </script>
+}

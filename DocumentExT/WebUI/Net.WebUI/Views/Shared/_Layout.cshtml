@@ -1,16 +1,98 @@
 ﻿<!DOCTYPE html>
-<html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js">
+<!--<![endif]-->
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
     <title>@ViewBag.Title</title>
+    
+    <link rel="shortcut icon" type="image/x-icon" href="@Url.Content("~/favicon.ico")">
+
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
 </head>
 <body>
-    @RenderBody()
+    <!-- Wrap -->
+    <div class="wrap @ViewBag.WrapClass">
 
+        <!-- Header -->
+        <div class="header">
+
+            <!-- HeaderTop -->
+            <div class="headerTop">
+                <div class="headerBox">
+                    <!-- H1 -->
+                    <h1><a href="javascript:GoMain()">
+                        <img src="@Url.Content("~/Content/images/common/h1_logo.gif")" alt="MakersN Make & Share!" /></a></h1>
+                    <!-- //H1 -->
+
+                    <!-- MainMenu -->
+                    <ul class="mainMenu">
+                        <li><a href="javascript:GoMain()" class="on">디자인</a></li>
+                        @*<li><a href="#">프린팅</a></li>*@
+                    </ul>
+                    <!-- //MainMenu -->
+
+                    <!-- rightZone -->
+
+                    <div class="rightZone">
+
+                        <!-- SearchArea -->
+                        <div class="searchArea">
+                            <input type="text" id="searchTxt" name="searchTxt" value="@ViewBag.Text" />
+                            <button title="검색" id="btnSearch" class="_search_btn"></button>
+                            @*</form>*@
+                            <p class="line"></p>
+                        </div>
+                        <!-- //SearchArea -->
+
+                        <!-- MemberArea -->
+                        <a href="javascript:quickChkPopup()" class="memberArea">
+                            
+                        </a>
+                        <a href="#" class="printing_btn" id="showTop" onclick="chkPopup();"></a>
+
+                        @using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm" }))
+                        {
+                            @Html.AntiForgeryToken()
+                        }
+                        <!-- //MemberArea -->
+                    </div>
+                    <!-- rightZone -->
+
+                </div>
+                <!-- //headerBox -->
+            </div>
+            <!-- //HeaderTop -->
+        </div>
+        <!-- //Header -->
+
+        <!-- contWrap -->
+        <div class="contWrap">
+            @RenderBody()
+        </div>
+        <!-- //contWrap -->
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footerList">
+                <div class="copyRight">
+                    <p>© makers corp. All right reserved.</p>
+                </div>
+            </div>
+
+        </div>
+        <!-- //Footer -->
+    </div>
+    <!-- //Wrap -->
+    
     @Scripts.Render("~/bundles/jquery")
+
     @RenderSection("scripts", required: false)
 </body>
 </html>

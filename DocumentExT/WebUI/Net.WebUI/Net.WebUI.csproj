@@ -13,13 +13,14 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Net.WebUI</RootNamespace>
     <AssemblyName>Net.WebUI</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <MvcBuildViews>false</MvcBuildViews>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -58,20 +59,18 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Web.Optimization, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Microsoft.AspNet.Web.Optimization.1.1.3\lib\net40\System.Web.Optimization.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Web" />
-    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Web.Abstractions" />
     <Reference Include="System.Web.Routing" />
     <Reference Include="System.Xml" />
@@ -122,6 +121,7 @@
       <Private>True</Private>
       <HintPath>..\..\packages\Microsoft.AspNet.WebPages.2.0.20710.0\lib\net40\System.Web.WebPages.Razor.dll</HintPath>
     </Reference>
+    <Reference Include="System.Xml.Linq" />
     <Reference Include="WebGrease, Version=1.6.5135.21930, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\packages\WebGrease.1.6.0\lib\WebGrease.dll</HintPath>
       <Private>True</Private>
@@ -132,49 +132,61 @@
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Configurations\ApplicationConfiguration.cs" />
+    <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\ProfileModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Content\themes\base\accordion.css" />
-    <Content Include="Content\themes\base\all.css" />
-    <Content Include="Content\themes\base\autocomplete.css" />
-    <Content Include="Content\themes\base\base.css" />
-    <Content Include="Content\themes\base\button.css" />
-    <Content Include="Content\themes\base\core.css" />
-    <Content Include="Content\themes\base\datepicker.css" />
-    <Content Include="Content\themes\base\dialog.css" />
-    <Content Include="Content\themes\base\draggable.css" />
-    <Content Include="Content\themes\base\images\ui-bg_flat_0_aaaaaa_40x100.png" />
-    <Content Include="Content\themes\base\images\ui-bg_flat_75_ffffff_40x100.png" />
-    <Content Include="Content\themes\base\images\ui-bg_glass_55_fbf9ee_1x400.png" />
-    <Content Include="Content\themes\base\images\ui-bg_glass_65_ffffff_1x400.png" />
-    <Content Include="Content\themes\base\images\ui-bg_glass_75_dadada_1x400.png" />
-    <Content Include="Content\themes\base\images\ui-bg_glass_75_e6e6e6_1x400.png" />
-    <Content Include="Content\themes\base\images\ui-bg_glass_95_fef1ec_1x400.png" />
-    <Content Include="Content\themes\base\images\ui-bg_highlight-soft_75_cccccc_1x100.png" />
-    <Content Include="Content\themes\base\images\ui-icons_222222_256x240.png" />
-    <Content Include="Content\themes\base\images\ui-icons_2e83ff_256x240.png" />
-    <Content Include="Content\themes\base\images\ui-icons_454545_256x240.png" />
-    <Content Include="Content\themes\base\images\ui-icons_888888_256x240.png" />
-    <Content Include="Content\themes\base\images\ui-icons_cd0a0a_256x240.png" />
-    <Content Include="Content\themes\base\menu.css" />
-    <Content Include="Content\themes\base\progressbar.css" />
-    <Content Include="Content\themes\base\resizable.css" />
-    <Content Include="Content\themes\base\selectable.css" />
-    <Content Include="Content\themes\base\selectmenu.css" />
-    <Content Include="Content\themes\base\slider.css" />
-    <Content Include="Content\themes\base\sortable.css" />
-    <Content Include="Content\themes\base\spinner.css" />
-    <Content Include="Content\themes\base\tabs.css" />
-    <Content Include="Content\themes\base\theme.css" />
-    <Content Include="Content\themes\base\tooltip.css" />
+    <Content Include="Content\css\common.css" />
+    <Content Include="Content\css\default.css" />
+    <Content Include="Content\css\font.css" />
+    <Content Include="Content\css\group.css" />
+    <Content Include="Content\css\jquery-ui-1.8.18.custom.css" />
+    <Content Include="Content\css\layout.css" />
+    <Content Include="Content\css\nanumbarungothic.css" />
+    <Content Include="Content\css\PagedList.css" />
+    <Content Include="Content\images\common\bg_search_line.gif" />
+    <Content Include="Content\images\common\btn\btnThumb.gif" />
+    <Content Include="Content\images\common\btn\btnThumb_over.gif" />
+    <Content Include="Content\images\common\btn\btnUpFile.gif" />
+    <Content Include="Content\images\common\btn\btnUpFile_over.gif" />
+    <Content Include="Content\images\common\btn\btnUseConfirmOk.png" />
+    <Content Include="Content\images\common\btn\btn_join.png" />
+    <Content Include="Content\images\common\btn\btn_login.gif" />
+    <Content Include="Content\images\common\btn\btn_login.png" />
+    <Content Include="Content\images\common\btn\btn_login_on.png" />
+    <Content Include="Content\images\common\btn\btn_login_pop.png" />
+    <Content Include="Content\images\common\btn\btn_myprint_drop.png" />
+    <Content Include="Content\images\common\btn\btn_myprint_drop_on.png" />
+    <Content Include="Content\images\common\btn\btn_search.png" />
+    <Content Include="Content\images\common\btn\btn_search_on.png" />
+    <Content Include="Content\images\common\btn_addfile.png" />
+    <Content Include="Content\images\common\btn_addfile_over.png" />
+    <Content Include="Content\images\common\foot_logo.gif" />
+    <Content Include="Content\images\common\foot_sns1.gif" />
+    <Content Include="Content\images\common\h1_logo.gif" />
+    <Content Include="Content\images\common\ico\ico_new_d.png" />
+    <Content Include="Content\images\common\joinfinish_txt1.png" />
+    <Content Include="Content\images\common\loading_bar.gif" />
+    <Content Include="Content\images\common\login_bg1.jpg" />
+    <Content Include="Content\images\common\login_bg2.jpg" />
+    <Content Include="Content\images\common\login_bg3.jpg" />
+    <Content Include="Content\images\common\login_logo.png" />
+    <Content Include="Content\images\common\login_tit1.png" />
+    <Content Include="Content\images\common\pop_logo.gif" />
+    <Content Include="Content\images\common\pwfind_tit.png" />
+    <Content Include="Content\images\common\pwsend_img1.png" />
     <Content Include="Global.asax" />
-    <Content Include="Content\Site.css" />
     <Content Include="ClassDiagram1.cd" />
+    <Content Include="Content\css\NanumBarunGothic.eot" />
+    <Content Include="Content\css\NanumBarunGothic.woff" />
+    <Content Include="Content\css\NanumBarunGothicBold.woff" />
+    <Content Include="Content\css\layout.css.bak" />
     <None Include="Scripts\jquery-2.2.0.intellisense.js" />
     <Content Include="Scripts\jquery-2.2.0.js" />
     <Content Include="Scripts\jquery-2.2.0.min.js" />
@@ -182,6 +194,7 @@
     <Content Include="Scripts\jquery-ui-1.11.4.js" />
     <Content Include="Scripts\jquery-ui-1.11.4.min.js" />
     <None Include="Scripts\jquery.validate-vsdoc.js" />
+    <Content Include="Scripts\jquery.bxslider.min.js" />
     <Content Include="Scripts\jquery.unobtrusive-ajax.js" />
     <Content Include="Scripts\jquery.unobtrusive-ajax.min.js" />
     <Content Include="Scripts\jquery.validate.js" />
@@ -191,7 +204,13 @@
     <Content Include="Scripts\knockout-2.2.0.debug.js" />
     <Content Include="Scripts\knockout-2.2.0.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
-    <Content Include="Scripts\three.js" />
+    <Content Include="Scripts\thingiview\normalcontrols.js" />
+    <Content Include="Scripts\thingiview\objloader.js" />
+    <Content Include="Scripts\thingiview\stlloader.js" />
+    <Content Include="Scripts\thingiview\thingiview.js" />
+    <Content Include="Scripts\thingiview\thingiview2.js" />
+    <Content Include="Scripts\three.v73\three.js" />
+    <Content Include="Scripts\three.v73\three.min.js" />
     <Content Include="Scripts\_references.js" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
@@ -209,10 +228,19 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Models\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\DAL\DAL.csproj">
+      <Project>{4226cb43-c074-47ef-8bd8-a136b098bf3f}</Project>
+      <Name>DAL</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Library\Net.Common\Net.Common.csproj">
+      <Project>{a8f70b79-f1b8-4cfe-9de1-9277a4e44267}</Project>
+      <Name>Net.Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
