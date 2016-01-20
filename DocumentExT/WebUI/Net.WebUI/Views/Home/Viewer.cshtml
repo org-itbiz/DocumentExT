@@ -135,6 +135,7 @@
             ThreeJsonLoader.statusDomElement.style.width = "auto";
 
             document.body.appendChild(ThreeJsonLoader.statusDomElement);
+
             ThreeLoadCallback = function (geometry, materials) {
                 thingiview.addModel(geometry);
                 document.body.removeChild(ThreeJsonLoader.statusDomElement);
@@ -142,7 +143,7 @@
             };
 
             thingiview = new Thingiview('viewer');
-            //thingiview.resize(630, 472);
+            thingiview.resize(630, 472);
             ThreeJsonLoader.load(js, ThreeLoadCallback);
             //여기까지
 

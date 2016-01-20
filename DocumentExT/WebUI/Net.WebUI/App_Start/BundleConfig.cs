@@ -19,11 +19,12 @@ namespace Net.WebUI
                         "~/Scripts/jquery.validate*"));
 
             bundles.Add(new ScriptBundle("~/bundles/threejs").Include(
-                        "~/Scripts/three.v73/three.min.js"));
+                        "~/Scripts/threejs.v71/three.min.js"
+                    ));
 
             bundles.Add(new ScriptBundle("~/bundles/d3loader").Include(
                 //"~/Scripts/three.js",
-                        "~/Scripts/thingiview/thingiview2.js",
+                        "~/Scripts/thingiview/thingiview.js",
                         "~/Scripts/thingiview/normalcontrols.js",
                         "~/Scripts/thingiview/objloader.js",
                         "~/Scripts/thingiview/stlloader.js"
