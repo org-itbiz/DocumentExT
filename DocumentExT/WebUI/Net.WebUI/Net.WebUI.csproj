@@ -213,12 +213,9 @@
     <Content Include="Scripts\thingiview\objloader.js" />
     <Content Include="Scripts\thingiview\stlloader.js" />
     <Content Include="Scripts\thingiview\thingiview.js" />
-    <Content Include="Scripts\threejs.v71\three.min.js" />
     <Content Include="Scripts\threejs.v71\three.js" />
-    <Content Include="Scripts\threejs.v71\three.min.js.map">
-      <DependentUpon>three.js</DependentUpon>
-    </Content>
     <None Include="Scripts\threejs.v71\three.min.js.old" />
+    <Content Include="Scripts\threejs.v71\three.min.js" />
     <Content Include="Scripts\threejs.v73\three.js" />
     <Content Include="Scripts\threejs.v73\three.min.js" />
     <Content Include="Scripts\_references.js" />

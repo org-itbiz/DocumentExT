@@ -19,7 +19,7 @@ namespace Net.WebUI
                         "~/Scripts/jquery.validate*"));
 
             bundles.Add(new ScriptBundle("~/bundles/threejs").Include(
-                        "~/Scripts/threejs.v71/three.js"
+                        "~/Scripts/threejs.v71/three.min.js"
                         //"~/Scripts/threejs.v71/three.min.js"
                     ));
 
