@@ -340,11 +340,11 @@ THREE.Color = function ( color ) {
 
 	if ( arguments.length === 3 ) {
 
-		return this.setRGB( arguments[ 0 ], arguments[ 1 ], arguments[ 2 ] );
+		return this.fromArray( arguments );
 
 	}
 
-	return this.set( color )
+	return this.set( color );
 
 };
 
@@ -396,33 +396,170 @@ THREE.Color.prototype = {
 
 	},
 
-	setHSL: function ( h, s, l ) {
+	setHSL: function () {
 
-		// h,s,l ranges are in 0.0 - 1.0
+		function hue2rgb( p, q, t ) {
 
-		if ( s === 0 ) {
+			if ( t < 0 ) t += 1;
+			if ( t > 1 ) t -= 1;
+			if ( t < 1 / 6 ) return p + ( q - p ) * 6 * t;
+			if ( t < 1 / 2 ) return q;
+			if ( t < 2 / 3 ) return p + ( q - p ) * 6 * ( 2 / 3 - t );
+			return p;
 
-			this.r = this.g = this.b = l;
+		}
 
-		} else {
+		return function ( h, s, l ) {
 
-			var hue2rgb = function ( p, q, t ) {
+			// h,s,l ranges are in 0.0 - 1.0
+			h = THREE.Math.euclideanModulo( h, 1 );
+			s = THREE.Math.clamp( s, 0, 1 );
+			l = THREE.Math.clamp( l, 0, 1 );
 
-				if ( t < 0 ) t += 1;
-				if ( t > 1 ) t -= 1;
-				if ( t < 1 / 6 ) return p + ( q - p ) * 6 * t;
-				if ( t < 1 / 2 ) return q;
-				if ( t < 2 / 3 ) return p + ( q - p ) * 6 * ( 2 / 3 - t );
-				return p;
+			if ( s === 0 ) {
 
-			};
+				this.r = this.g = this.b = l;
 
-			var p = l <= 0.5 ? l * ( 1 + s ) : l + s - ( l * s );
-			var q = ( 2 * l ) - p;
+			} else {
 
-			this.r = hue2rgb( q, p, h + 1 / 3 );
-			this.g = hue2rgb( q, p, h );
-			this.b = hue2rgb( q, p, h - 1 / 3 );
+				var p = l <= 0.5 ? l * ( 1 + s ) : l + s - ( l * s );
+				var q = ( 2 * l ) - p;
+
+				this.r = hue2rgb( q, p, h + 1 / 3 );
+				this.g = hue2rgb( q, p, h );
+				this.b = hue2rgb( q, p, h - 1 / 3 );
+
+			}
+
+			return this;
+
+		};
+
+	}(),
+
+	setStyle: function ( style ) {
+
+		function handleAlpha( string ) {
+
+			if ( string === undefined ) return;
+
+			if ( parseFloat( string ) < 1 ) {
+
+				console.warn( 'THREE.Color: Alpha component of ' + style + ' will be ignored.' );
+
+			}
+
+		}
+
+
+		var m;
+
+		if ( m = /^((?:rgb|hsl)a?)\(\s*([^\)]*)\)/.exec( style ) ) {
+
+			// rgb / hsl
+
+			var color;
+			var name = m[ 1 ];
+			var components = m[ 2 ];
+
+			switch ( name ) {
+
+				case 'rgb':
+				case 'rgba':
+
+					if ( color = /^(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(,\s*([0-9]*\.?[0-9]+)\s*)?$/.exec( components ) ) {
+
+						// rgb(255,0,0) rgba(255,0,0,0.5)
+						this.r = Math.min( 255, parseInt( color[ 1 ], 10 ) ) / 255;
+						this.g = Math.min( 255, parseInt( color[ 2 ], 10 ) ) / 255;
+						this.b = Math.min( 255, parseInt( color[ 3 ], 10 ) ) / 255;
+
+						handleAlpha( color[ 5 ] );
+
+						return this;
+
+					}
+
+					if ( color = /^(\d+)\%\s*,\s*(\d+)\%\s*,\s*(\d+)\%\s*(,\s*([0-9]*\.?[0-9]+)\s*)?$/.exec( components ) ) {
+
+						// rgb(100%,0%,0%) rgba(100%,0%,0%,0.5)
+						this.r = Math.min( 100, parseInt( color[ 1 ], 10 ) ) / 100;
+						this.g = Math.min( 100, parseInt( color[ 2 ], 10 ) ) / 100;
+						this.b = Math.min( 100, parseInt( color[ 3 ], 10 ) ) / 100;
+
+						handleAlpha( color[ 5 ] );
+
+						return this;
+
+					}
+
+					break;
+
+				case 'hsl':
+				case 'hsla':
+
+					if ( color = /^([0-9]*\.?[0-9]+)\s*,\s*(\d+)\%\s*,\s*(\d+)\%\s*(,\s*([0-9]*\.?[0-9]+)\s*)?$/.exec( components ) ) {
+
+						// hsl(120,50%,50%) hsla(120,50%,50%,0.5)
+						var h = parseFloat( color[ 1 ] ) / 360;
+						var s = parseInt( color[ 2 ], 10 ) / 100;
+						var l = parseInt( color[ 3 ], 10 ) / 100;
+
+						handleAlpha( color[ 5 ] );
+
+						return this.setHSL( h, s, l );
+
+					}
+
+					break;
+
+			}
+
+		} else if ( m = /^\#([A-Fa-f0-9]+)$/.exec( style ) ) {
+
+			// hex color
+
+			var hex = m[ 1 ];
+			var size = hex.length;
+
+			if ( size === 3 ) {
+
+				// #ff0
+				this.r = parseInt( hex.charAt( 0 ) + hex.charAt( 0 ), 16 ) / 255;
+				this.g = parseInt( hex.charAt( 1 ) + hex.charAt( 1 ), 16 ) / 255;
+				this.b = parseInt( hex.charAt( 2 ) + hex.charAt( 2 ), 16 ) / 255;
+
+				return this;
+
+			} else if ( size === 6 ) {
+
+				// #ff0000
+				this.r = parseInt( hex.charAt( 0 ) + hex.charAt( 1 ), 16 ) / 255;
+				this.g = parseInt( hex.charAt( 2 ) + hex.charAt( 3 ), 16 ) / 255;
+				this.b = parseInt( hex.charAt( 4 ) + hex.charAt( 5 ), 16 ) / 255;
+
+				return this;
+
+			}
+
+		}
+
+		if ( style && style.length > 0 ) {
+
+			// color keywords
+			var hex = THREE.ColorKeywords[ style ];
+
+			if ( hex !== undefined ) {
+
+				// red
+				this.setHex( hex );
+
+			} else {
+
+				// unknown color
+				console.warn( 'THREE.Color: Unknown color ' + style );
+
+			}
 
 		}
 
@@ -430,70 +567,9 @@ THREE.Color.prototype = {
 
 	},
 
-	setStyle: function ( style ) {
+	clone: function () {
 
-		// rgb(255,0,0)
-
-		if ( /^rgb\((\d+), ?(\d+), ?(\d+)\)$/i.test( style ) ) {
-
-			var color = /^rgb\((\d+), ?(\d+), ?(\d+)\)$/i.exec( style );
-
-			this.r = Math.min( 255, parseInt( color[ 1 ], 10 ) ) / 255;
-			this.g = Math.min( 255, parseInt( color[ 2 ], 10 ) ) / 255;
-			this.b = Math.min( 255, parseInt( color[ 3 ], 10 ) ) / 255;
-
-			return this;
-
-		}
-
-		// rgb(100%,0%,0%)
-
-		if ( /^rgb\((\d+)\%, ?(\d+)\%, ?(\d+)\%\)$/i.test( style ) ) {
-
-			var color = /^rgb\((\d+)\%, ?(\d+)\%, ?(\d+)\%\)$/i.exec( style );
-
-			this.r = Math.min( 100, parseInt( color[ 1 ], 10 ) ) / 100;
-			this.g = Math.min( 100, parseInt( color[ 2 ], 10 ) ) / 100;
-			this.b = Math.min( 100, parseInt( color[ 3 ], 10 ) ) / 100;
-
-			return this;
-
-		}
-
-		// #ff0000
-
-		if ( /^\#([0-9a-f]{6})$/i.test( style ) ) {
-
-			var color = /^\#([0-9a-f]{6})$/i.exec( style );
-
-			this.setHex( parseInt( color[ 1 ], 16 ) );
-
-			return this;
-
-		}
-
-		// #f00
-
-		if ( /^\#([0-9a-f])([0-9a-f])([0-9a-f])$/i.test( style ) ) {
-
-			var color = /^\#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec( style );
-
-			this.setHex( parseInt( color[ 1 ] + color[ 1 ] + color[ 2 ] + color[ 2 ] + color[ 3 ] + color[ 3 ], 16 ) );
-
-			return this;
-
-		}
-
-		// red
-
-		if ( /^(\w+)$/i.test( style ) ) {
-
-			this.setHex( THREE.ColorKeywords[ style ] );
-
-			return this;
-
-		}
-
+		return new this.constructor( this.r, this.g, this.b );
 
 	},
 
@@ -696,11 +772,13 @@ THREE.Color.prototype = {
 
 	},
 
-	fromArray: function ( array ) {
+	fromArray: function ( array, offset ) {
 
-		this.r = array[ 0 ];
-		this.g = array[ 1 ];
-		this.b = array[ 2 ];
+		if ( offset === undefined ) offset = 0;
+
+		this.r = array[ offset ];
+		this.g = array[ offset + 1 ];
+		this.b = array[ offset + 2 ];
 
 		return this;
 
@@ -716,11 +794,6 @@ THREE.Color.prototype = {
 		array[ offset + 2 ] = this.b;
 
 		return array;
-	},
-
-	clone: function () {
-
-		return new THREE.Color().setRGB( this.r, this.g, this.b );
 
 	}
 
@@ -757,7 +830,7 @@ THREE.ColorKeywords = { 'aliceblue': 0xF0F8FF, 'antiquewhite': 0xFAEBD7, 'aqua':
  * @author mikael emtinger / http://gomo.se/
  * @author alteredq / http://alteredqualia.com/
  * @author WestLangley / http://github.com/WestLangley
- * @author bhouston / http://exocortex.com
+ * @author bhouston / http://clara.io
  */
 
 THREE.Quaternion = function ( x, y, z, w ) {
@@ -772,8 +845,6 @@ THREE.Quaternion = function ( x, y, z, w ) {
 THREE.Quaternion.prototype = {
 
 	constructor: THREE.Quaternion,
-
-	_x: 0,_y: 0, _z: 0, _w: 0,
 
 	get x () {
 
@@ -840,6 +911,12 @@ THREE.Quaternion.prototype = {
 
 	},
 
+	clone: function () {
+
+		return new this.constructor( this._x, this._y, this._z, this._w );
+
+	},
+
 	copy: function ( quaternion ) {
 
 		this._x = quaternion.x;
@@ -858,6 +935,7 @@ THREE.Quaternion.prototype = {
 		if ( euler instanceof THREE.Euler === false ) {
 
 			throw new Error( 'THREE.Quaternion: .setFromEuler() now expects a Euler rotation rather than a Vector3 and order.' );
+
 		}
 
 		// http://www.mathworks.com/matlabcentral/fileexchange/
@@ -871,42 +949,44 @@ THREE.Quaternion.prototype = {
 		var s2 = Math.sin( euler._y / 2 );
 		var s3 = Math.sin( euler._z / 2 );
 
-		if ( euler.order === 'XYZ' ) {
+		var order = euler.order;
+
+		if ( order === 'XYZ' ) {
 
 			this._x = s1 * c2 * c3 + c1 * s2 * s3;
 			this._y = c1 * s2 * c3 - s1 * c2 * s3;
 			this._z = c1 * c2 * s3 + s1 * s2 * c3;
 			this._w = c1 * c2 * c3 - s1 * s2 * s3;
 
-		} else if ( euler.order === 'YXZ' ) {
+		} else if ( order === 'YXZ' ) {
 
 			this._x = s1 * c2 * c3 + c1 * s2 * s3;
 			this._y = c1 * s2 * c3 - s1 * c2 * s3;
 			this._z = c1 * c2 * s3 - s1 * s2 * c3;
 			this._w = c1 * c2 * c3 + s1 * s2 * s3;
 
-		} else if ( euler.order === 'ZXY' ) {
+		} else if ( order === 'ZXY' ) {
 
 			this._x = s1 * c2 * c3 - c1 * s2 * s3;
 			this._y = c1 * s2 * c3 + s1 * c2 * s3;
 			this._z = c1 * c2 * s3 + s1 * s2 * c3;
 			this._w = c1 * c2 * c3 - s1 * s2 * s3;
 
-		} else if ( euler.order === 'ZYX' ) {
+		} else if ( order === 'ZYX' ) {
 
 			this._x = s1 * c2 * c3 - c1 * s2 * s3;
 			this._y = c1 * s2 * c3 + s1 * c2 * s3;
 			this._z = c1 * c2 * s3 - s1 * s2 * c3;
 			this._w = c1 * c2 * c3 + s1 * s2 * s3;
 
-		} else if ( euler.order === 'YZX' ) {
+		} else if ( order === 'YZX' ) {
 
 			this._x = s1 * c2 * c3 + c1 * s2 * s3;
 			this._y = c1 * s2 * c3 + s1 * c2 * s3;
 			this._z = c1 * c2 * s3 - s1 * s2 * c3;
 			this._w = c1 * c2 * c3 - s1 * s2 * s3;
 
-		} else if ( euler.order === 'XZY' ) {
+		} else if ( order === 'XZY' ) {
 
 			this._x = s1 * c2 * c3 - c1 * s2 * s3;
 			this._y = c1 * s2 * c3 - s1 * c2 * s3;
@@ -1118,7 +1198,7 @@ THREE.Quaternion.prototype = {
 
 		if ( p !== undefined ) {
 
-			THREE.warn( 'THREE.Quaternion: .multiply() now only accepts one argument. Use .multiplyQuaternions( a, b ) instead.' );
+			console.warn( 'THREE.Quaternion: .multiply() now only accepts one argument. Use .multiplyQuaternions( a, b ) instead.' );
 			return this.multiplyQuaternions( q, p );
 
 		}
@@ -1147,7 +1227,7 @@ THREE.Quaternion.prototype = {
 
 	multiplyVector3: function ( vector ) {
 
-		THREE.warn( 'THREE.Quaternion: .multiplyVector3() has been removed. Use is now vector.applyQuaternion( quaternion ) instead.' );
+		console.warn( 'THREE.Quaternion: .multiplyVector3() has been removed. Use is now vector.applyQuaternion( quaternion ) instead.' );
 		return vector.applyQuaternion( this );
 
 	},
@@ -1260,13 +1340,7 @@ THREE.Quaternion.prototype = {
 
 	},
 
-	onChangeCallback: function () {},
-
-	clone: function () {
-
-		return new THREE.Quaternion( this._x, this._y, this._z, this._w );
-
-	}
+	onChangeCallback: function () {}
 
 };
 
@@ -1274,7 +1348,7 @@ THREE.Quaternion.slerp = function ( qa, qb, qm, t ) {
 
 	return qm.copy( qa ).slerp( qb, t );
 
-}
+};
 
 // File:src/math/Vector2.js
 
@@ -1295,6 +1369,14 @@ THREE.Vector2 = function ( x, y ) {
 THREE.Vector2.prototype = {
 
 	constructor: THREE.Vector2,
+
+	get width() { return this.x },
+	set width( value ) { this.x = value },
+
+	get height() { return this.y },
+	set height( value ) { this.y = value },
+
+	//
 
 	set: function ( x, y ) {
 
@@ -1345,6 +1427,12 @@ THREE.Vector2.prototype = {
 
 	},
 
+	clone: function () {
+
+		return new this.constructor( this.x, this.y );
+
+	},
+
 	copy: function ( v ) {
 
 		this.x = v.x;
@@ -1358,7 +1446,7 @@ THREE.Vector2.prototype = {
 
 		if ( w !== undefined ) {
 
-			THREE.warn( 'THREE.Vector2: .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector2: .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
 			return this.addVectors( v, w );
 
 		}
@@ -1388,11 +1476,20 @@ THREE.Vector2.prototype = {
 
 	},
 
+	addScaledVector: function ( v, s ) {
+
+		this.x += v.x * s;
+		this.y += v.y * s;
+
+		return this;
+
+	},
+
 	sub: function ( v, w ) {
 
 		if ( w !== undefined ) {
 
-			THREE.warn( 'THREE.Vector2: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector2: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
 			return this.subVectors( v, w );
 
 		}
@@ -1431,10 +1528,15 @@ THREE.Vector2.prototype = {
 
 	},
 
-	multiplyScalar: function ( s ) {
+	multiplyScalar: function ( scalar ) {
 
-		this.x *= s;
-		this.y *= s;
+		if ( isFinite( scalar ) ) {
+			this.x *= scalar;
+			this.y *= scalar;
+		} else {
+			this.x = 0;
+			this.y = 0;
+		}
 
 		return this;
 
@@ -1451,37 +1553,14 @@ THREE.Vector2.prototype = {
 
 	divideScalar: function ( scalar ) {
 
-		if ( scalar !== 0 ) {
-
-			var invScalar = 1 / scalar;
-
-			this.x *= invScalar;
-			this.y *= invScalar;
-
-		} else {
-
-			this.x = 0;
-			this.y = 0;
-
-		}
-
-		return this;
+		return this.multiplyScalar( 1 / scalar );
 
 	},
 
 	min: function ( v ) {
 
-		if ( this.x > v.x ) {
-
-			this.x = v.x;
-
-		}
-
-		if ( this.y > v.y ) {
-
-			this.y = v.y;
-
-		}
+		this.x = Math.min( this.x, v.x );
+		this.y = Math.min( this.y, v.y );
 
 		return this;
 
@@ -1489,17 +1568,8 @@ THREE.Vector2.prototype = {
 
 	max: function ( v ) {
 
-		if ( this.x < v.x ) {
-
-			this.x = v.x;
-
-		}
-
-		if ( this.y < v.y ) {
-
-			this.y = v.y;
-
-		}
+		this.x = Math.max( this.x, v.x );
+		this.y = Math.max( this.y, v.y );
 
 		return this;
 
@@ -1509,34 +1579,18 @@ THREE.Vector2.prototype = {
 
 		// This function assumes min < max, if this assumption isn't true it will not operate correctly
 
-		if ( this.x < min.x ) {
-
-			this.x = min.x;
-
-		} else if ( this.x > max.x ) {
-
-			this.x = max.x;
-
-		}
-
-		if ( this.y < min.y ) {
-
-			this.y = min.y;
-
-		} else if ( this.y > max.y ) {
-
-			this.y = max.y;
-
-		}
+		this.x = Math.max( min.x, Math.min( max.x, this.x ) );
+		this.y = Math.max( min.y, Math.min( max.y, this.y ) );
 
 		return this;
+
 	},
 
-	clampScalar: ( function () {
+	clampScalar: function () {
 
 		var min, max;
 
-		return function ( minVal, maxVal ) {
+		return function clampScalar( minVal, maxVal ) {
 
 			if ( min === undefined ) {
 
@@ -1552,7 +1606,17 @@ THREE.Vector2.prototype = {
 
 		};
 
-	} )(),
+	}(),
+
+	clampLength: function ( min, max ) {
+
+		var length = this.length();
+
+		this.multiplyScalar( Math.max( min, Math.min( max, length ) ) / length );
+
+		return this;
+
+	},
 
 	floor: function () {
 
@@ -1617,6 +1681,12 @@ THREE.Vector2.prototype = {
 
 	},
 
+	lengthManhattan: function() {
+
+		return Math.abs( this.x ) + Math.abs( this.y );
+
+	},
+
 	normalize: function () {
 
 		return this.divideScalar( this.length() );
@@ -1636,16 +1706,9 @@ THREE.Vector2.prototype = {
 
 	},
 
-	setLength: function ( l ) {
+	setLength: function ( length ) {
 
-		var oldLength = this.length();
-
-		if ( oldLength !== 0 && l !== oldLength ) {
-
-			this.multiplyScalar( l / oldLength );
-		}
-
-		return this;
+		return this.multiplyScalar( length / this.length() );
 
 	},
 
@@ -1708,9 +1771,17 @@ THREE.Vector2.prototype = {
 
 	},
 
-	clone: function () {
+	rotateAround: function ( center, angle ) {
 
-		return new THREE.Vector2( this.x, this.y );
+		var c = Math.cos( angle ), s = Math.sin( angle );
+
+		var x = this.x - center.x;
+		var y = this.y - center.y;
+
+		this.x = x * c - y * s + center.x;
+		this.y = x * s + y * c + center.y;
+
+		return this;
 
 	}
 
@@ -1799,6 +1870,12 @@ THREE.Vector3.prototype = {
 
 	},
 
+	clone: function () {
+
+		return new this.constructor( this.x, this.y, this.z );
+
+	},
+
 	copy: function ( v ) {
 
 		this.x = v.x;
@@ -1813,7 +1890,7 @@ THREE.Vector3.prototype = {
 
 		if ( w !== undefined ) {
 
-			THREE.warn( 'THREE.Vector3: .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector3: .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
 			return this.addVectors( v, w );
 
 		}
@@ -1846,11 +1923,21 @@ THREE.Vector3.prototype = {
 
 	},
 
+	addScaledVector: function ( v, s ) {
+
+		this.x += v.x * s;
+		this.y += v.y * s;
+		this.z += v.z * s;
+
+		return this;
+
+	},
+
 	sub: function ( v, w ) {
 
 		if ( w !== undefined ) {
 
-			THREE.warn( 'THREE.Vector3: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector3: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
 			return this.subVectors( v, w );
 
 		}
@@ -1862,7 +1949,7 @@ THREE.Vector3.prototype = {
 		return this;
 
 	},
-	
+
 	subScalar: function ( s ) {
 
 		this.x -= s;
@@ -1887,7 +1974,7 @@ THREE.Vector3.prototype = {
 
 		if ( w !== undefined ) {
 
-			THREE.warn( 'THREE.Vector3: .multiply() now only accepts one argument. Use .multiplyVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector3: .multiply() now only accepts one argument. Use .multiplyVectors( a, b ) instead.' );
 			return this.multiplyVectors( v, w );
 
 		}
@@ -1902,9 +1989,15 @@ THREE.Vector3.prototype = {
 
 	multiplyScalar: function ( scalar ) {
 
-		this.x *= scalar;
-		this.y *= scalar;
-		this.z *= scalar;
+		if ( isFinite( scalar ) ) {
+			this.x *= scalar;
+			this.y *= scalar;
+			this.z *= scalar;
+		} else {
+			this.x = 0;
+			this.y = 0;
+			this.z = 0;
+		}
 
 		return this;
 
@@ -1924,11 +2017,11 @@ THREE.Vector3.prototype = {
 
 		var quaternion;
 
-		return function ( euler ) {
+		return function applyEuler( euler ) {
 
 			if ( euler instanceof THREE.Euler === false ) {
 
-				THREE.error( 'THREE.Vector3: .applyEuler() now expects a Euler rotation rather than a Vector3 and order.' );
+				console.error( 'THREE.Vector3: .applyEuler() now expects a Euler rotation rather than a Vector3 and order.' );
 
 			}
 
@@ -1946,7 +2039,7 @@ THREE.Vector3.prototype = {
 
 		var quaternion;
 
-		return function ( axis, angle ) {
+		return function applyAxisAngle( axis, angle ) {
 
 			if ( quaternion === undefined ) quaternion = new THREE.Quaternion();
 
@@ -2039,7 +2132,7 @@ THREE.Vector3.prototype = {
 
 		var matrix;
 
-		return function ( camera ) {
+		return function project( camera ) {
 
 			if ( matrix === undefined ) matrix = new THREE.Matrix4();
 
@@ -2054,7 +2147,7 @@ THREE.Vector3.prototype = {
 
 		var matrix;
 
-		return function ( camera ) {
+		return function unproject( camera ) {
 
 			if ( matrix === undefined ) matrix = new THREE.Matrix4();
 
@@ -2096,45 +2189,15 @@ THREE.Vector3.prototype = {
 
 	divideScalar: function ( scalar ) {
 
-		if ( scalar !== 0 ) {
-
-			var invScalar = 1 / scalar;
-
-			this.x *= invScalar;
-			this.y *= invScalar;
-			this.z *= invScalar;
-
-		} else {
-
-			this.x = 0;
-			this.y = 0;
-			this.z = 0;
-
-		}
-
-		return this;
+		return this.multiplyScalar( 1 / scalar );
 
 	},
 
 	min: function ( v ) {
 
-		if ( this.x > v.x ) {
-
-			this.x = v.x;
-
-		}
-
-		if ( this.y > v.y ) {
-
-			this.y = v.y;
-
-		}
-
-		if ( this.z > v.z ) {
-
-			this.z = v.z;
-
-		}
+		this.x = Math.min( this.x, v.x );
+		this.y = Math.min( this.y, v.y );
+		this.z = Math.min( this.z, v.z );
 
 		return this;
 
@@ -2142,23 +2205,9 @@ THREE.Vector3.prototype = {
 
 	max: function ( v ) {
 
-		if ( this.x < v.x ) {
-
-			this.x = v.x;
-
-		}
-
-		if ( this.y < v.y ) {
-
-			this.y = v.y;
-
-		}
-
-		if ( this.z < v.z ) {
-
-			this.z = v.z;
-
-		}
+		this.x = Math.max( this.x, v.x );
+		this.y = Math.max( this.y, v.y );
+		this.z = Math.max( this.z, v.z );
 
 		return this;
 
@@ -2168,45 +2217,19 @@ THREE.Vector3.prototype = {
 
 		// This function assumes min < max, if this assumption isn't true it will not operate correctly
 
-		if ( this.x < min.x ) {
-
-			this.x = min.x;
-
-		} else if ( this.x > max.x ) {
-
-			this.x = max.x;
-
-		}
-
-		if ( this.y < min.y ) {
-
-			this.y = min.y;
-
-		} else if ( this.y > max.y ) {
-
-			this.y = max.y;
-
-		}
-
-		if ( this.z < min.z ) {
-
-			this.z = min.z;
-
-		} else if ( this.z > max.z ) {
-
-			this.z = max.z;
-
-		}
+		this.x = Math.max( min.x, Math.min( max.x, this.x ) );
+		this.y = Math.max( min.y, Math.min( max.y, this.y ) );
+		this.z = Math.max( min.z, Math.min( max.z, this.z ) );
 
 		return this;
 
 	},
 
-	clampScalar: ( function () {
+	clampScalar: function () {
 
 		var min, max;
 
-		return function ( minVal, maxVal ) {
+		return function clampScalar( minVal, maxVal ) {
 
 			if ( min === undefined ) {
 
@@ -2222,7 +2245,17 @@ THREE.Vector3.prototype = {
 
 		};
 
-	} )(),
+	}(),
+
+	clampLength: function ( min, max ) {
+
+		var length = this.length();
+
+		this.multiplyScalar( Math.max( min, Math.min( max, length ) ) / length );
+
+		return this;
+
+	},
 
 	floor: function () {
 
@@ -2304,16 +2337,9 @@ THREE.Vector3.prototype = {
 
 	},
 
-	setLength: function ( l ) {
+	setLength: function ( length ) {
 
-		var oldLength = this.length();
-
-		if ( oldLength !== 0 && l !== oldLength  ) {
-
-			this.multiplyScalar( l / oldLength );
-		}
-
-		return this;
+		return this.multiplyScalar( length / this.length() );
 
 	},
 
@@ -2339,7 +2365,7 @@ THREE.Vector3.prototype = {
 
 		if ( w !== undefined ) {
 
-			THREE.warn( 'THREE.Vector3: .cross() now only accepts one argument. Use .crossVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector3: .cross() now only accepts one argument. Use .crossVectors( a, b ) instead.' );
 			return this.crossVectors( v, w );
 
 		}
@@ -2371,7 +2397,7 @@ THREE.Vector3.prototype = {
 
 		var v1, dot;
 
-		return function ( vector ) {
+		return function projectOnVector( vector ) {
 
 			if ( v1 === undefined ) v1 = new THREE.Vector3();
 
@@ -2389,7 +2415,7 @@ THREE.Vector3.prototype = {
 
 		var v1;
 
-		return function ( planeNormal ) {
+		return function projectOnPlane( planeNormal ) {
 
 			if ( v1 === undefined ) v1 = new THREE.Vector3();
 
@@ -2408,7 +2434,7 @@ THREE.Vector3.prototype = {
 
 		var v1;
 
-		return function ( normal ) {
+		return function reflect( normal ) {
 
 			if ( v1 === undefined ) v1 = new THREE.Vector3();
 
@@ -2446,19 +2472,19 @@ THREE.Vector3.prototype = {
 
 	setEulerFromRotationMatrix: function ( m, order ) {
 
-		THREE.error( 'THREE.Vector3: .setEulerFromRotationMatrix() has been removed. Use Euler.setFromRotationMatrix() instead.' );
+		console.error( 'THREE.Vector3: .setEulerFromRotationMatrix() has been removed. Use Euler.setFromRotationMatrix() instead.' );
 
 	},
 
 	setEulerFromQuaternion: function ( q, order ) {
 
-		THREE.error( 'THREE.Vector3: .setEulerFromQuaternion() has been removed. Use Euler.setFromQuaternion() instead.' );
+		console.error( 'THREE.Vector3: .setEulerFromQuaternion() has been removed. Use Euler.setFromQuaternion() instead.' );
 
 	},
 
 	getPositionFromMatrix: function ( m ) {
 
-		THREE.warn( 'THREE.Vector3: .getPositionFromMatrix() has been renamed to .setFromMatrixPosition().' );
+		console.warn( 'THREE.Vector3: .getPositionFromMatrix() has been renamed to .setFromMatrixPosition().' );
 
 		return this.setFromMatrixPosition( m );
 
@@ -2466,14 +2492,15 @@ THREE.Vector3.prototype = {
 
 	getScaleFromMatrix: function ( m ) {
 
-		THREE.warn( 'THREE.Vector3: .getScaleFromMatrix() has been renamed to .setFromMatrixScale().' );
+		console.warn( 'THREE.Vector3: .getScaleFromMatrix() has been renamed to .setFromMatrixScale().' );
 
 		return this.setFromMatrixScale( m );
+
 	},
 
 	getColumnFromMatrix: function ( index, matrix ) {
 
-		THREE.warn( 'THREE.Vector3: .getColumnFromMatrix() has been renamed to .setFromMatrixColumn().' );
+		console.warn( 'THREE.Vector3: .getColumnFromMatrix() has been renamed to .setFromMatrixColumn().' );
 
 		return this.setFromMatrixColumn( index, matrix );
 
@@ -2491,8 +2518,8 @@ THREE.Vector3.prototype = {
 
 	setFromMatrixScale: function ( m ) {
 
-		var sx = this.set( m.elements[ 0 ], m.elements[ 1 ], m.elements[  2 ] ).length();
-		var sy = this.set( m.elements[ 4 ], m.elements[ 5 ], m.elements[  6 ] ).length();
+		var sx = this.set( m.elements[ 0 ], m.elements[ 1 ], m.elements[ 2 ] ).length();
+		var sy = this.set( m.elements[ 4 ], m.elements[ 5 ], m.elements[ 6 ] ).length();
 		var sz = this.set( m.elements[ 8 ], m.elements[ 9 ], m.elements[ 10 ] ).length();
 
 		this.x = sx;
@@ -2500,10 +2527,11 @@ THREE.Vector3.prototype = {
 		this.z = sz;
 
 		return this;
+
 	},
 
 	setFromMatrixColumn: function ( index, matrix ) {
-		
+
 		var offset = index * 4;
 
 		var me = matrix.elements;
@@ -2558,12 +2586,6 @@ THREE.Vector3.prototype = {
 		this.z = attribute.array[ index + 2 ];
 
 		return this;
-
-	},
-
-	clone: function () {
-
-		return new THREE.Vector3( this.x, this.y, this.z );
 
 	}
 
@@ -2663,6 +2685,12 @@ THREE.Vector4.prototype = {
 
 	},
 
+	clone: function () {
+
+		return new this.constructor( this.x, this.y, this.z, this.w );
+
+	},
+
 	copy: function ( v ) {
 
 		this.x = v.x;
@@ -2678,7 +2706,7 @@ THREE.Vector4.prototype = {
 
 		if ( w !== undefined ) {
 
-			THREE.warn( 'THREE.Vector4: .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector4: .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
 			return this.addVectors( v, w );
 
 		}
@@ -2714,11 +2742,22 @@ THREE.Vector4.prototype = {
 
 	},
 
+	addScaledVector: function ( v, s ) {
+
+		this.x += v.x * s;
+		this.y += v.y * s;
+		this.z += v.z * s;
+		this.w += v.w * s;
+
+		return this;
+
+	},
+
 	sub: function ( v, w ) {
 
 		if ( w !== undefined ) {
 
-			THREE.warn( 'THREE.Vector4: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector4: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
 			return this.subVectors( v, w );
 
 		}
@@ -2756,10 +2795,17 @@ THREE.Vector4.prototype = {
 
 	multiplyScalar: function ( scalar ) {
 
-		this.x *= scalar;
-		this.y *= scalar;
-		this.z *= scalar;
-		this.w *= scalar;
+		if ( isFinite( scalar ) ) {
+			this.x *= scalar;
+			this.y *= scalar;
+			this.z *= scalar;
+			this.w *= scalar;
+		} else {
+			this.x = 0;
+			this.y = 0;
+			this.z = 0;
+			this.w = 0;
+		}
 
 		return this;
 
@@ -2785,25 +2831,7 @@ THREE.Vector4.prototype = {
 
 	divideScalar: function ( scalar ) {
 
-		if ( scalar !== 0 ) {
-
-			var invScalar = 1 / scalar;
-
-			this.x *= invScalar;
-			this.y *= invScalar;
-			this.z *= invScalar;
-			this.w *= invScalar;
-
-		} else {
-
-			this.x = 0;
-			this.y = 0;
-			this.z = 0;
-			this.w = 1;
-
-		}
-
-		return this;
+		return this.multiplyScalar( 1 / scalar );
 
 	},
 
@@ -2883,7 +2911,9 @@ THREE.Vector4.prototype = {
 			var xz = ( m13 + m31 ) / 4;
 			var yz = ( m23 + m32 ) / 4;
 
-			if ( ( xx > yy ) && ( xx > zz ) ) { // m11 is the largest diagonal term
+			if ( ( xx > yy ) && ( xx > zz ) ) {
+
+				// m11 is the largest diagonal term
 
 				if ( xx < epsilon ) {
 
@@ -2899,7 +2929,9 @@ THREE.Vector4.prototype = {
 
 				}
 
-			} else if ( yy > zz ) { // m22 is the largest diagonal term
+			} else if ( yy > zz ) {
+
+				// m22 is the largest diagonal term
 
 				if ( yy < epsilon ) {
 
@@ -2915,7 +2947,9 @@ THREE.Vector4.prototype = {
 
 				}
 
-			} else { // m33 is the largest diagonal term so base result on this
+			} else {
+
+				// m33 is the largest diagonal term so base result on this
 
 				if ( zz < epsilon ) {
 
@@ -2961,29 +2995,10 @@ THREE.Vector4.prototype = {
 
 	min: function ( v ) {
 
-		if ( this.x > v.x ) {
-
-			this.x = v.x;
-
-		}
-
-		if ( this.y > v.y ) {
-
-			this.y = v.y;
-
-		}
-
-		if ( this.z > v.z ) {
-
-			this.z = v.z;
-
-		}
-
-		if ( this.w > v.w ) {
-
-			this.w = v.w;
-
-		}
+		this.x = Math.min( this.x, v.x );
+		this.y = Math.min( this.y, v.y );
+		this.z = Math.min( this.z, v.z );
+		this.w = Math.min( this.w, v.w );
 
 		return this;
 
@@ -2991,29 +3006,10 @@ THREE.Vector4.prototype = {
 
 	max: function ( v ) {
 
-		if ( this.x < v.x ) {
-
-			this.x = v.x;
-
-		}
-
-		if ( this.y < v.y ) {
-
-			this.y = v.y;
-
-		}
-
-		if ( this.z < v.z ) {
-
-			this.z = v.z;
-
-		}
-
-		if ( this.w < v.w ) {
-
-			this.w = v.w;
-
-		}
+		this.x = Math.max( this.x, v.x );
+		this.y = Math.max( this.y, v.y );
+		this.z = Math.max( this.z, v.z );
+		this.w = Math.max( this.w, v.w );
 
 		return this;
 
@@ -3023,55 +3019,20 @@ THREE.Vector4.prototype = {
 
 		// This function assumes min < max, if this assumption isn't true it will not operate correctly
 
-		if ( this.x < min.x ) {
-
-			this.x = min.x;
-
-		} else if ( this.x > max.x ) {
-
-			this.x = max.x;
-
-		}
-
-		if ( this.y < min.y ) {
-
-			this.y = min.y;
-
-		} else if ( this.y > max.y ) {
-
-			this.y = max.y;
-
-		}
-
-		if ( this.z < min.z ) {
-
-			this.z = min.z;
-
-		} else if ( this.z > max.z ) {
-
-			this.z = max.z;
-
-		}
-
-		if ( this.w < min.w ) {
-
-			this.w = min.w;
-
-		} else if ( this.w > max.w ) {
-
-			this.w = max.w;
-
-		}
+		this.x = Math.max( min.x, Math.min( max.x, this.x ) );
+		this.y = Math.max( min.y, Math.min( max.y, this.y ) );
+		this.z = Math.max( min.z, Math.min( max.z, this.z ) );
+		this.w = Math.max( min.w, Math.min( max.w, this.w ) );
 
 		return this;
 
 	},
 
-	clampScalar: ( function () {
+	clampScalar: function () {
 
 		var min, max;
 
-		return function ( minVal, maxVal ) {
+		return function clampScalar( minVal, maxVal ) {
 
 			if ( min === undefined ) {
 
@@ -3087,9 +3048,9 @@ THREE.Vector4.prototype = {
 
 		};
 
-	} )(),
+	}(),
 
-  floor: function () {
+	floor: function () {
 
 		this.x = Math.floor( this.x );
 		this.y = Math.floor( this.y );
@@ -3098,9 +3059,9 @@ THREE.Vector4.prototype = {
 
 		return this;
 
-  },
+	},
 
-  ceil: function () {
+	ceil: function () {
 
 		this.x = Math.ceil( this.x );
 		this.y = Math.ceil( this.y );
@@ -3109,9 +3070,9 @@ THREE.Vector4.prototype = {
 
 		return this;
 
-  },
+	},
 
-  round: function () {
+	round: function () {
 
 		this.x = Math.round( this.x );
 		this.y = Math.round( this.y );
@@ -3120,9 +3081,9 @@ THREE.Vector4.prototype = {
 
 		return this;
 
-  },
+	},
 
-  roundToZero: function () {
+	roundToZero: function () {
 
 		this.x = ( this.x < 0 ) ? Math.ceil( this.x ) : Math.floor( this.x );
 		this.y = ( this.y < 0 ) ? Math.ceil( this.y ) : Math.floor( this.y );
@@ -3131,7 +3092,7 @@ THREE.Vector4.prototype = {
 
 		return this;
 
-  },
+	},
 
 	negate: function () {
 
@@ -3174,17 +3135,9 @@ THREE.Vector4.prototype = {
 
 	},
 
-	setLength: function ( l ) {
+	setLength: function ( length ) {
 
-		var oldLength = this.length();
-
-		if ( oldLength !== 0 && l !== oldLength ) {
-
-			this.multiplyScalar( l / oldLength );
-
-		}
-
-		return this;
+		return this.multiplyScalar( length / this.length() );
 
 	},
 
@@ -3253,12 +3206,6 @@ THREE.Vector4.prototype = {
 
 		return this;
 
-	},
-
-	clone: function () {
-
-		return new THREE.Vector4( this.x, this.y, this.z, this.w );
-
 	}
 
 };
@@ -3268,998 +3215,1006 @@ THREE.Vector4.prototype = {
 /**
  * @author mrdoob / http://mrdoob.com/
  * @author WestLangley / http://github.com/WestLangley
- * @author bhouston / http://exocortex.com
+ * @author bhouston / http://clara.io
  */
 
-THREE.Euler = function ( x, y, z, order ) {
+THREE.Euler = function (x, y, z, order) {
 
-	this._x = x || 0;
-	this._y = y || 0;
-	this._z = z || 0;
-	this._order = order || THREE.Euler.DefaultOrder;
+    this._x = x || 0;
+    this._y = y || 0;
+    this._z = z || 0;
+    this._order = order || THREE.Euler.DefaultOrder;
 
 };
 
-THREE.Euler.RotationOrders = [ 'XYZ', 'YZX', 'ZXY', 'XZY', 'YXZ', 'ZYX' ];
+THREE.Euler.RotationOrders = ['XYZ', 'YZX', 'ZXY', 'XZY', 'YXZ', 'ZYX'];
 
 THREE.Euler.DefaultOrder = 'XYZ';
 
 THREE.Euler.prototype = {
 
-	constructor: THREE.Euler,
+    constructor: THREE.Euler,
 
-	_x: 0, _y: 0, _z: 0, _order: THREE.Euler.DefaultOrder,
+    get x() {
 
-	get x () {
+        return this._x;
 
-		return this._x;
+    },
 
-	},
+    set x(value) {
 
-	set x ( value ) {
+        this._x = value;
+        this.onChangeCallback();
 
-		this._x = value;
-		this.onChangeCallback();
+    },
 
-	},
+    get y() {
 
-	get y () {
+        return this._y;
 
-		return this._y;
+    },
 
-	},
+    set y(value) {
 
-	set y ( value ) {
+        this._y = value;
+        this.onChangeCallback();
 
-		this._y = value;
-		this.onChangeCallback();
+    },
 
-	},
+    get z() {
 
-	get z () {
+        return this._z;
 
-		return this._z;
+    },
 
-	},
+    set z(value) {
 
-	set z ( value ) {
+        this._z = value;
+        this.onChangeCallback();
 
-		this._z = value;
-		this.onChangeCallback();
+    },
 
-	},
+    get order() {
 
-	get order () {
+        return this._order;
 
-		return this._order;
+    },
 
-	},
+    set order(value) {
 
-	set order ( value ) {
+        this._order = value;
+        this.onChangeCallback();
 
-		this._order = value;
-		this.onChangeCallback();
+    },
 
-	},
+    set: function (x, y, z, order) {
 
-	set: function ( x, y, z, order ) {
+        this._x = x;
+        this._y = y;
+        this._z = z;
+        this._order = order || this._order;
 
-		this._x = x;
-		this._y = y;
-		this._z = z;
-		this._order = order || this._order;
+        this.onChangeCallback();
 
-		this.onChangeCallback();
+        return this;
 
-		return this;
+    },
 
-	},
+    clone: function () {
 
-	copy: function ( euler ) {
+        return new this.constructor(this._x, this._y, this._z, this._order);
 
-		this._x = euler._x;
-		this._y = euler._y;
-		this._z = euler._z;
-		this._order = euler._order;
+    },
 
-		this.onChangeCallback();
+    copy: function (euler) {
 
-		return this;
+        this._x = euler._x;
+        this._y = euler._y;
+        this._z = euler._z;
+        this._order = euler._order;
 
-	},
+        this.onChangeCallback();
 
-	setFromRotationMatrix: function ( m, order, update ) {
+        return this;
 
-		var clamp = THREE.Math.clamp;
+    },
 
-		// assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
+    setFromRotationMatrix: function (m, order, update) {
 
-		var te = m.elements;
-		var m11 = te[ 0 ], m12 = te[ 4 ], m13 = te[ 8 ];
-		var m21 = te[ 1 ], m22 = te[ 5 ], m23 = te[ 9 ];
-		var m31 = te[ 2 ], m32 = te[ 6 ], m33 = te[ 10 ];
+        var clamp = THREE.Math.clamp;
 
-		order = order || this._order;
+        // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
 
-		if ( order === 'XYZ' ) {
+        var te = m.elements;
+        var m11 = te[0], m12 = te[4], m13 = te[8];
+        var m21 = te[1], m22 = te[5], m23 = te[9];
+        var m31 = te[2], m32 = te[6], m33 = te[10];
 
-			this._y = Math.asin( clamp( m13, - 1, 1 ) );
+        order = order || this._order;
 
-			if ( Math.abs( m13 ) < 0.99999 ) {
+        if (order === 'XYZ') {
 
-				this._x = Math.atan2( - m23, m33 );
-				this._z = Math.atan2( - m12, m11 );
+            this._y = Math.asin(clamp(m13, -1, 1));
 
-			} else {
+            if (Math.abs(m13) < 0.99999) {
 
-				this._x = Math.atan2( m32, m22 );
-				this._z = 0;
+                this._x = Math.atan2(-m23, m33);
+                this._z = Math.atan2(-m12, m11);
 
-			}
+            } else {
 
-		} else if ( order === 'YXZ' ) {
+                this._x = Math.atan2(m32, m22);
+                this._z = 0;
 
-			this._x = Math.asin( - clamp( m23, - 1, 1 ) );
+            }
 
-			if ( Math.abs( m23 ) < 0.99999 ) {
+        } else if (order === 'YXZ') {
 
-				this._y = Math.atan2( m13, m33 );
-				this._z = Math.atan2( m21, m22 );
+            this._x = Math.asin(-clamp(m23, -1, 1));
 
-			} else {
+            if (Math.abs(m23) < 0.99999) {
 
-				this._y = Math.atan2( - m31, m11 );
-				this._z = 0;
+                this._y = Math.atan2(m13, m33);
+                this._z = Math.atan2(m21, m22);
 
-			}
+            } else {
 
-		} else if ( order === 'ZXY' ) {
+                this._y = Math.atan2(-m31, m11);
+                this._z = 0;
 
-			this._x = Math.asin( clamp( m32, - 1, 1 ) );
+            }
 
-			if ( Math.abs( m32 ) < 0.99999 ) {
+        } else if (order === 'ZXY') {
 
-				this._y = Math.atan2( - m31, m33 );
-				this._z = Math.atan2( - m12, m22 );
+            this._x = Math.asin(clamp(m32, -1, 1));
 
-			} else {
+            if (Math.abs(m32) < 0.99999) {
 
-				this._y = 0;
-				this._z = Math.atan2( m21, m11 );
+                this._y = Math.atan2(-m31, m33);
+                this._z = Math.atan2(-m12, m22);
 
-			}
+            } else {
 
-		} else if ( order === 'ZYX' ) {
+                this._y = 0;
+                this._z = Math.atan2(m21, m11);
 
-			this._y = Math.asin( - clamp( m31, - 1, 1 ) );
+            }
 
-			if ( Math.abs( m31 ) < 0.99999 ) {
+        } else if (order === 'ZYX') {
 
-				this._x = Math.atan2( m32, m33 );
-				this._z = Math.atan2( m21, m11 );
+            this._y = Math.asin(-clamp(m31, -1, 1));
 
-			} else {
+            if (Math.abs(m31) < 0.99999) {
 
-				this._x = 0;
-				this._z = Math.atan2( - m12, m22 );
+                this._x = Math.atan2(m32, m33);
+                this._z = Math.atan2(m21, m11);
 
-			}
+            } else {
 
-		} else if ( order === 'YZX' ) {
+                this._x = 0;
+                this._z = Math.atan2(-m12, m22);
 
-			this._z = Math.asin( clamp( m21, - 1, 1 ) );
+            }
 
-			if ( Math.abs( m21 ) < 0.99999 ) {
+        } else if (order === 'YZX') {
 
-				this._x = Math.atan2( - m23, m22 );
-				this._y = Math.atan2( - m31, m11 );
+            this._z = Math.asin(clamp(m21, -1, 1));
 
-			} else {
+            if (Math.abs(m21) < 0.99999) {
 
-				this._x = 0;
-				this._y = Math.atan2( m13, m33 );
+                this._x = Math.atan2(-m23, m22);
+                this._y = Math.atan2(-m31, m11);
 
-			}
+            } else {
 
-		} else if ( order === 'XZY' ) {
+                this._x = 0;
+                this._y = Math.atan2(m13, m33);
 
-			this._z = Math.asin( - clamp( m12, - 1, 1 ) );
+            }
 
-			if ( Math.abs( m12 ) < 0.99999 ) {
+        } else if (order === 'XZY') {
 
-				this._x = Math.atan2( m32, m22 );
-				this._y = Math.atan2( m13, m11 );
+            this._z = Math.asin(-clamp(m12, -1, 1));
 
-			} else {
+            if (Math.abs(m12) < 0.99999) {
 
-				this._x = Math.atan2( - m23, m33 );
-				this._y = 0;
+                this._x = Math.atan2(m32, m22);
+                this._y = Math.atan2(m13, m11);
 
-			}
+            } else {
 
-		} else {
+                this._x = Math.atan2(-m23, m33);
+                this._y = 0;
 
-			THREE.warn( 'THREE.Euler: .setFromRotationMatrix() given unsupported order: ' + order )
+            }
 
-		}
+        } else {
 
-		this._order = order;
+            console.warn('THREE.Euler: .setFromRotationMatrix() given unsupported order: ' + order)
 
-		if ( update !== false ) this.onChangeCallback();
+        }
 
-		return this;
+        this._order = order;
 
-	},
+        if (update !== false) this.onChangeCallback();
 
-	setFromQuaternion: function () {
+        return this;
 
-		var matrix;
+    },
 
-		return function ( q, order, update ) {
+    setFromQuaternion: function () {
 
-			if ( matrix === undefined ) matrix = new THREE.Matrix4();
-			matrix.makeRotationFromQuaternion( q );
-			this.setFromRotationMatrix( matrix, order, update );
+        var matrix;
 
-			return this;
+        return function (q, order, update) {
 
-		};
+            if (matrix === undefined) matrix = new THREE.Matrix4();
+            matrix.makeRotationFromQuaternion(q);
+            this.setFromRotationMatrix(matrix, order, update);
 
-	}(),
+            return this;
 
-	setFromVector3: function ( v, order ) {
+        };
 
-		return this.set( v.x, v.y, v.z, order || this._order );
+    }(),
 
-	},
+    setFromVector3: function (v, order) {
 
-	reorder: function () {
+        return this.set(v.x, v.y, v.z, order || this._order);
 
-		// WARNING: this discards revolution information -bhouston
+    },
 
-		var q = new THREE.Quaternion();
+    reorder: function () {
 
-		return function ( newOrder ) {
+        // WARNING: this discards revolution information -bhouston
 
-			q.setFromEuler( this );
-			this.setFromQuaternion( q, newOrder );
+        var q = new THREE.Quaternion();
 
-		};
+        return function (newOrder) {
 
-	}(),
+            q.setFromEuler(this);
+            this.setFromQuaternion(q, newOrder);
 
-	equals: function ( euler ) {
+        };
 
-		return ( euler._x === this._x ) && ( euler._y === this._y ) && ( euler._z === this._z ) && ( euler._order === this._order );
+    }(),
 
-	},
+    equals: function (euler) {
 
-	fromArray: function ( array ) {
+        return (euler._x === this._x) && (euler._y === this._y) && (euler._z === this._z) && (euler._order === this._order);
 
-		this._x = array[ 0 ];
-		this._y = array[ 1 ];
-		this._z = array[ 2 ];
-		if ( array[ 3 ] !== undefined ) this._order = array[ 3 ];
+    },
 
-		this.onChangeCallback();
+    fromArray: function (array) {
 
-		return this;
+        this._x = array[0];
+        this._y = array[1];
+        this._z = array[2];
+        if (array[3] !== undefined) this._order = array[3];
 
-	},
+        this.onChangeCallback();
 
-	toArray: function ( array, offset ) {
+        return this;
 
-		if ( array === undefined ) array = [];
-		if ( offset === undefined ) offset = 0;
+    },
 
-		array[ offset ] = this._x;
-		array[ offset + 1 ] = this._y;
-		array[ offset + 2 ] = this._z;
-		array[ offset + 3 ] = this._order;
+    toArray: function (array, offset) {
 
-		return array;
-	},
+        if (array === undefined) array = [];
+        if (offset === undefined) offset = 0;
 
-	toVector3: function ( optionalResult ) {
+        array[offset] = this._x;
+        array[offset + 1] = this._y;
+        array[offset + 2] = this._z;
+        array[offset + 3] = this._order;
 
-		if ( optionalResult ) {
+        return array;
 
-			return optionalResult.set( this._x, this._y, this._z );
+    },
 
-		} else {
+    toVector3: function (optionalResult) {
 
-			return new THREE.Vector3( this._x, this._y, this._z );
+        if (optionalResult) {
 
-		}
+            return optionalResult.set(this._x, this._y, this._z);
 
-	},
+        } else {
 
-	onChange: function ( callback ) {
+            return new THREE.Vector3(this._x, this._y, this._z);
 
-		this.onChangeCallback = callback;
+        }
 
-		return this;
+    },
 
-	},
+    onChange: function (callback) {
 
-	onChangeCallback: function () {},
+        this.onChangeCallback = callback;
 
-	clone: function () {
+        return this;
 
-		return new THREE.Euler( this._x, this._y, this._z, this._order );
+    },
 
-	}
+    onChangeCallback: function () { }
 
 };
 
 // File:src/math/Line3.js
 
 /**
- * @author bhouston / http://exocortex.com
+ * @author bhouston / http://clara.io
  */
 
-THREE.Line3 = function ( start, end ) {
+THREE.Line3 = function (start, end) {
 
-	this.start = ( start !== undefined ) ? start : new THREE.Vector3();
-	this.end = ( end !== undefined ) ? end : new THREE.Vector3();
+    this.start = (start !== undefined) ? start : new THREE.Vector3();
+    this.end = (end !== undefined) ? end : new THREE.Vector3();
 
 };
 
 THREE.Line3.prototype = {
 
-	constructor: THREE.Line3,
+    constructor: THREE.Line3,
 
-	set: function ( start, end ) {
+    set: function (start, end) {
 
-		this.start.copy( start );
-		this.end.copy( end );
+        this.start.copy(start);
+        this.end.copy(end);
 
-		return this;
+        return this;
 
-	},
+    },
 
-	copy: function ( line ) {
+    clone: function () {
 
-		this.start.copy( line.start );
-		this.end.copy( line.end );
+        return new this.constructor().copy(this);
 
-		return this;
+    },
 
-	},
+    copy: function (line) {
 
-	center: function ( optionalTarget ) {
+        this.start.copy(line.start);
+        this.end.copy(line.end);
 
-		var result = optionalTarget || new THREE.Vector3();
-		return result.addVectors( this.start, this.end ).multiplyScalar( 0.5 );
+        return this;
 
-	},
+    },
 
-	delta: function ( optionalTarget ) {
+    center: function (optionalTarget) {
 
-		var result = optionalTarget || new THREE.Vector3();
-		return result.subVectors( this.end, this.start );
+        var result = optionalTarget || new THREE.Vector3();
+        return result.addVectors(this.start, this.end).multiplyScalar(0.5);
 
-	},
+    },
 
-	distanceSq: function () {
+    delta: function (optionalTarget) {
 
-		return this.start.distanceToSquared( this.end );
+        var result = optionalTarget || new THREE.Vector3();
+        return result.subVectors(this.end, this.start);
 
-	},
+    },
 
-	distance: function () {
+    distanceSq: function () {
 
-		return this.start.distanceTo( this.end );
+        return this.start.distanceToSquared(this.end);
 
-	},
+    },
 
-	at: function ( t, optionalTarget ) {
+    distance: function () {
 
-		var result = optionalTarget || new THREE.Vector3();
+        return this.start.distanceTo(this.end);
 
-		return this.delta( result ).multiplyScalar( t ).add( this.start );
+    },
 
-	},
+    at: function (t, optionalTarget) {
 
-	closestPointToPointParameter: function () {
+        var result = optionalTarget || new THREE.Vector3();
 
-		var startP = new THREE.Vector3();
-		var startEnd = new THREE.Vector3();
+        return this.delta(result).multiplyScalar(t).add(this.start);
 
-		return function ( point, clampToLine ) {
+    },
 
-			startP.subVectors( point, this.start );
-			startEnd.subVectors( this.end, this.start );
+    closestPointToPointParameter: function () {
 
-			var startEnd2 = startEnd.dot( startEnd );
-			var startEnd_startP = startEnd.dot( startP );
+        var startP = new THREE.Vector3();
+        var startEnd = new THREE.Vector3();
 
-			var t = startEnd_startP / startEnd2;
+        return function (point, clampToLine) {
 
-			if ( clampToLine ) {
+            startP.subVectors(point, this.start);
+            startEnd.subVectors(this.end, this.start);
 
-				t = THREE.Math.clamp( t, 0, 1 );
+            var startEnd2 = startEnd.dot(startEnd);
+            var startEnd_startP = startEnd.dot(startP);
 
-			}
+            var t = startEnd_startP / startEnd2;
 
-			return t;
+            if (clampToLine) {
 
-		};
+                t = THREE.Math.clamp(t, 0, 1);
 
-	}(),
+            }
 
-	closestPointToPoint: function ( point, clampToLine, optionalTarget ) {
+            return t;
 
-		var t = this.closestPointToPointParameter( point, clampToLine );
+        };
 
-		var result = optionalTarget || new THREE.Vector3();
+    }(),
 
-		return this.delta( result ).multiplyScalar( t ).add( this.start );
+    closestPointToPoint: function (point, clampToLine, optionalTarget) {
 
-	},
+        var t = this.closestPointToPointParameter(point, clampToLine);
 
-	applyMatrix4: function ( matrix ) {
+        var result = optionalTarget || new THREE.Vector3();
 
-		this.start.applyMatrix4( matrix );
-		this.end.applyMatrix4( matrix );
+        return this.delta(result).multiplyScalar(t).add(this.start);
 
-		return this;
+    },
 
-	},
+    applyMatrix4: function (matrix) {
 
-	equals: function ( line ) {
+        this.start.applyMatrix4(matrix);
+        this.end.applyMatrix4(matrix);
 
-		return line.start.equals( this.start ) && line.end.equals( this.end );
+        return this;
 
-	},
+    },
 
-	clone: function () {
+    equals: function (line) {
 
-		return new THREE.Line3().copy( this );
+        return line.start.equals(this.start) && line.end.equals(this.end);
 
-	}
+    }
 
 };
 
 // File:src/math/Box2.js
 
 /**
- * @author bhouston / http://exocortex.com
+ * @author bhouston / http://clara.io
  */
 
-THREE.Box2 = function ( min, max ) {
+THREE.Box2 = function (min, max) {
 
-	this.min = ( min !== undefined ) ? min : new THREE.Vector2( Infinity, Infinity );
-	this.max = ( max !== undefined ) ? max : new THREE.Vector2( - Infinity, - Infinity );
+    this.min = (min !== undefined) ? min : new THREE.Vector2(Infinity, Infinity);
+    this.max = (max !== undefined) ? max : new THREE.Vector2(-Infinity, -Infinity);
 
 };
 
 THREE.Box2.prototype = {
 
-	constructor: THREE.Box2,
+    constructor: THREE.Box2,
 
-	set: function ( min, max ) {
+    set: function (min, max) {
 
-		this.min.copy( min );
-		this.max.copy( max );
+        this.min.copy(min);
+        this.max.copy(max);
 
-		return this;
+        return this;
 
-	},
+    },
 
-	setFromPoints: function ( points ) {
+    setFromPoints: function (points) {
 
-		this.makeEmpty();
+        this.makeEmpty();
 
-		for ( var i = 0, il = points.length; i < il; i ++ ) {
+        for (var i = 0, il = points.length; i < il; i++) {
 
-			this.expandByPoint( points[ i ] )
+            this.expandByPoint(points[i])
 
-		}
+        }
 
-		return this;
+        return this;
 
-	},
+    },
 
-	setFromCenterAndSize: function () {
+    setFromCenterAndSize: function () {
 
-		var v1 = new THREE.Vector2();
+        var v1 = new THREE.Vector2();
 
-		return function ( center, size ) {
+        return function (center, size) {
 
-			var halfSize = v1.copy( size ).multiplyScalar( 0.5 );
-			this.min.copy( center ).sub( halfSize );
-			this.max.copy( center ).add( halfSize );
+            var halfSize = v1.copy(size).multiplyScalar(0.5);
+            this.min.copy(center).sub(halfSize);
+            this.max.copy(center).add(halfSize);
 
-			return this;
+            return this;
 
-		};
+        };
 
-	}(),
+    }(),
 
-	copy: function ( box ) {
+    clone: function () {
 
-		this.min.copy( box.min );
-		this.max.copy( box.max );
+        return new this.constructor().copy(this);
 
-		return this;
+    },
 
-	},
+    copy: function (box) {
 
-	makeEmpty: function () {
+        this.min.copy(box.min);
+        this.max.copy(box.max);
 
-		this.min.x = this.min.y = Infinity;
-		this.max.x = this.max.y = - Infinity;
+        return this;
 
-		return this;
+    },
 
-	},
+    makeEmpty: function () {
 
-	empty: function () {
+        this.min.x = this.min.y = Infinity;
+        this.max.x = this.max.y = -Infinity;
 
-		// this is a more robust check for empty than ( volume <= 0 ) because volume can get positive with two negative axes
+        return this;
 
-		return ( this.max.x < this.min.x ) || ( this.max.y < this.min.y );
+    },
 
-	},
+    empty: function () {
 
-	center: function ( optionalTarget ) {
+        // this is a more robust check for empty than ( volume <= 0 ) because volume can get positive with two negative axes
 
-		var result = optionalTarget || new THREE.Vector2();
-		return result.addVectors( this.min, this.max ).multiplyScalar( 0.5 );
+        return (this.max.x < this.min.x) || (this.max.y < this.min.y);
 
-	},
+    },
 
-	size: function ( optionalTarget ) {
+    center: function (optionalTarget) {
 
-		var result = optionalTarget || new THREE.Vector2();
-		return result.subVectors( this.max, this.min );
+        var result = optionalTarget || new THREE.Vector2();
+        return result.addVectors(this.min, this.max).multiplyScalar(0.5);
 
-	},
+    },
 
-	expandByPoint: function ( point ) {
+    size: function (optionalTarget) {
 
-		this.min.min( point );
-		this.max.max( point );
+        var result = optionalTarget || new THREE.Vector2();
+        return result.subVectors(this.max, this.min);
 
-		return this;
-	},
+    },
 
-	expandByVector: function ( vector ) {
+    expandByPoint: function (point) {
 
-		this.min.sub( vector );
-		this.max.add( vector );
+        this.min.min(point);
+        this.max.max(point);
 
-		return this;
-	},
+        return this;
 
-	expandByScalar: function ( scalar ) {
+    },
 
-		this.min.addScalar( - scalar );
-		this.max.addScalar( scalar );
+    expandByVector: function (vector) {
 
-		return this;
-	},
+        this.min.sub(vector);
+        this.max.add(vector);
 
-	containsPoint: function ( point ) {
+        return this;
 
-		if ( point.x < this.min.x || point.x > this.max.x ||
-		     point.y < this.min.y || point.y > this.max.y ) {
+    },
 
-			return false;
+    expandByScalar: function (scalar) {
 
-		}
+        this.min.addScalar(-scalar);
+        this.max.addScalar(scalar);
 
-		return true;
+        return this;
 
-	},
+    },
 
-	containsBox: function ( box ) {
+    containsPoint: function (point) {
 
-		if ( ( this.min.x <= box.min.x ) && ( box.max.x <= this.max.x ) &&
-		     ( this.min.y <= box.min.y ) && ( box.max.y <= this.max.y ) ) {
+        if (point.x < this.min.x || point.x > this.max.x ||
+		     point.y < this.min.y || point.y > this.max.y) {
 
-			return true;
+            return false;
 
-		}
+        }
 
-		return false;
+        return true;
 
-	},
+    },
 
-	getParameter: function ( point, optionalTarget ) {
+    containsBox: function (box) {
 
-		// This can potentially have a divide by zero if the box
-		// has a size dimension of 0.
+        if ((this.min.x <= box.min.x) && (box.max.x <= this.max.x) &&
+		     (this.min.y <= box.min.y) && (box.max.y <= this.max.y)) {
 
-		var result = optionalTarget || new THREE.Vector2();
+            return true;
 
-		return result.set(
-			( point.x - this.min.x ) / ( this.max.x - this.min.x ),
-			( point.y - this.min.y ) / ( this.max.y - this.min.y )
+        }
+
+        return false;
+
+    },
+
+    getParameter: function (point, optionalTarget) {
+
+        // This can potentially have a divide by zero if the box
+        // has a size dimension of 0.
+
+        var result = optionalTarget || new THREE.Vector2();
+
+        return result.set(
+			(point.x - this.min.x) / (this.max.x - this.min.x),
+			(point.y - this.min.y) / (this.max.y - this.min.y)
 		);
 
-	},
+    },
 
-	isIntersectionBox: function ( box ) {
+    isIntersectionBox: function (box) {
 
-		// using 6 splitting planes to rule out intersections.
+        // using 6 splitting planes to rule out intersections.
 
-		if ( box.max.x < this.min.x || box.min.x > this.max.x ||
-		     box.max.y < this.min.y || box.min.y > this.max.y ) {
+        if (box.max.x < this.min.x || box.min.x > this.max.x ||
+		     box.max.y < this.min.y || box.min.y > this.max.y) {
 
-			return false;
+            return false;
 
-		}
+        }
 
-		return true;
+        return true;
 
-	},
+    },
 
-	clampPoint: function ( point, optionalTarget ) {
+    clampPoint: function (point, optionalTarget) {
 
-		var result = optionalTarget || new THREE.Vector2();
-		return result.copy( point ).clamp( this.min, this.max );
+        var result = optionalTarget || new THREE.Vector2();
+        return result.copy(point).clamp(this.min, this.max);
 
-	},
+    },
 
-	distanceToPoint: function () {
+    distanceToPoint: function () {
 
-		var v1 = new THREE.Vector2();
+        var v1 = new THREE.Vector2();
 
-		return function ( point ) {
+        return function (point) {
 
-			var clampedPoint = v1.copy( point ).clamp( this.min, this.max );
-			return clampedPoint.sub( point ).length();
+            var clampedPoint = v1.copy(point).clamp(this.min, this.max);
+            return clampedPoint.sub(point).length();
 
-		};
+        };
 
-	}(),
+    }(),
 
-	intersect: function ( box ) {
+    intersect: function (box) {
 
-		this.min.max( box.min );
-		this.max.min( box.max );
+        this.min.max(box.min);
+        this.max.min(box.max);
 
-		return this;
+        return this;
 
-	},
+    },
 
-	union: function ( box ) {
+    union: function (box) {
 
-		this.min.min( box.min );
-		this.max.max( box.max );
+        this.min.min(box.min);
+        this.max.max(box.max);
 
-		return this;
+        return this;
 
-	},
+    },
 
-	translate: function ( offset ) {
+    translate: function (offset) {
 
-		this.min.add( offset );
-		this.max.add( offset );
+        this.min.add(offset);
+        this.max.add(offset);
 
-		return this;
+        return this;
 
-	},
+    },
 
-	equals: function ( box ) {
+    equals: function (box) {
 
-		return box.min.equals( this.min ) && box.max.equals( this.max );
+        return box.min.equals(this.min) && box.max.equals(this.max);
 
-	},
-
-	clone: function () {
-
-		return new THREE.Box2().copy( this );
-
-	}
+    }
 
 };
 
 // File:src/math/Box3.js
 
 /**
- * @author bhouston / http://exocortex.com
+ * @author bhouston / http://clara.io
  * @author WestLangley / http://github.com/WestLangley
  */
 
-THREE.Box3 = function ( min, max ) {
+THREE.Box3 = function (min, max) {
 
-	this.min = ( min !== undefined ) ? min : new THREE.Vector3( Infinity, Infinity, Infinity );
-	this.max = ( max !== undefined ) ? max : new THREE.Vector3( - Infinity, - Infinity, - Infinity );
+    this.min = (min !== undefined) ? min : new THREE.Vector3(Infinity, Infinity, Infinity);
+    this.max = (max !== undefined) ? max : new THREE.Vector3(-Infinity, -Infinity, -Infinity);
 
 };
 
 THREE.Box3.prototype = {
 
-	constructor: THREE.Box3,
+    constructor: THREE.Box3,
 
-	set: function ( min, max ) {
+    set: function (min, max) {
 
-		this.min.copy( min );
-		this.max.copy( max );
+        this.min.copy(min);
+        this.max.copy(max);
 
-		return this;
+        return this;
 
-	},
+    },
 
-	setFromPoints: function ( points ) {
+    setFromPoints: function (points) {
 
-		this.makeEmpty();
+        this.makeEmpty();
 
-		for ( var i = 0, il = points.length; i < il; i ++ ) {
+        for (var i = 0, il = points.length; i < il; i++) {
 
-			this.expandByPoint( points[ i ] )
+            this.expandByPoint(points[i]);
 
-		}
+        }
 
-		return this;
+        return this;
 
-	},
+    },
 
-	setFromCenterAndSize: function () {
+    setFromCenterAndSize: function () {
 
-		var v1 = new THREE.Vector3();
+        var v1 = new THREE.Vector3();
 
-		return function ( center, size ) {
+        return function (center, size) {
 
-			var halfSize = v1.copy( size ).multiplyScalar( 0.5 );
+            var halfSize = v1.copy(size).multiplyScalar(0.5);
 
-			this.min.copy( center ).sub( halfSize );
-			this.max.copy( center ).add( halfSize );
+            this.min.copy(center).sub(halfSize);
+            this.max.copy(center).add(halfSize);
 
-			return this;
+            return this;
 
-		};
+        };
 
-	}(),
+    }(),
 
-	setFromObject: function () {
+    setFromObject: function () {
 
-		// Computes the world-axis-aligned bounding box of an object (including its children),
-		// accounting for both the object's, and childrens', world transforms
+        // Computes the world-axis-aligned bounding box of an object (including its children),
+        // accounting for both the object's, and children's, world transforms
 
-		var v1 = new THREE.Vector3();
+        var v1 = new THREE.Vector3();
 
-		return function ( object ) {
+        return function (object) {
 
-			var scope = this;
+            var scope = this;
 
-			object.updateMatrixWorld( true );
+            object.updateMatrixWorld(true);
 
-			this.makeEmpty();
+            this.makeEmpty();
 
-			object.traverse( function ( node ) {
+            object.traverse(function (node) {
 
-				var geometry = node.geometry;
+                var geometry = node.geometry;
 
-				if ( geometry !== undefined ) {
+                if (geometry !== undefined) {
 
-					if ( geometry instanceof THREE.Geometry ) {
+                    if (geometry instanceof THREE.Geometry) {
 
-						var vertices = geometry.vertices;
+                        var vertices = geometry.vertices;
 
-						for ( var i = 0, il = vertices.length; i < il; i ++ ) {
+                        for (var i = 0, il = vertices.length; i < il; i++) {
 
-							v1.copy( vertices[ i ] );
+                            v1.copy(vertices[i]);
 
-							v1.applyMatrix4( node.matrixWorld );
+                            v1.applyMatrix4(node.matrixWorld);
 
-							scope.expandByPoint( v1 );
+                            scope.expandByPoint(v1);
 
-						}
+                        }
 
-					} else if ( geometry instanceof THREE.BufferGeometry && geometry.attributes[ 'position' ] !== undefined ) {
+                    } else if (geometry instanceof THREE.BufferGeometry && geometry.attributes['position'] !== undefined) {
 
-						var positions = geometry.attributes[ 'position' ].array;
+                        var positions = geometry.attributes['position'].array;
 
-						for ( var i = 0, il = positions.length; i < il; i += 3 ) {
+                        for (var i = 0, il = positions.length; i < il; i += 3) {
 
-							v1.set( positions[ i ], positions[ i + 1 ], positions[ i + 2 ] );
+                            v1.set(positions[i], positions[i + 1], positions[i + 2]);
 
-							v1.applyMatrix4( node.matrixWorld );
+                            v1.applyMatrix4(node.matrixWorld);
 
-							scope.expandByPoint( v1 );
+                            scope.expandByPoint(v1);
 
-						}
+                        }
 
-					}
+                    }
 
-				}
+                }
 
-			} );
+            });
 
-			return this;
+            return this;
 
-		};
+        };
 
-	}(),
+    }(),
 
-	copy: function ( box ) {
+    clone: function () {
 
-		this.min.copy( box.min );
-		this.max.copy( box.max );
+        return new this.constructor().copy(this);
 
-		return this;
+    },
 
-	},
+    copy: function (box) {
 
-	makeEmpty: function () {
+        this.min.copy(box.min);
+        this.max.copy(box.max);
 
-		this.min.x = this.min.y = this.min.z = Infinity;
-		this.max.x = this.max.y = this.max.z = - Infinity;
+        return this;
 
-		return this;
+    },
 
-	},
+    makeEmpty: function () {
 
-	empty: function () {
+        this.min.x = this.min.y = this.min.z = Infinity;
+        this.max.x = this.max.y = this.max.z = -Infinity;
 
-		// this is a more robust check for empty than ( volume <= 0 ) because volume can get positive with two negative axes
+        return this;
 
-		return ( this.max.x < this.min.x ) || ( this.max.y < this.min.y ) || ( this.max.z < this.min.z );
+    },
 
-	},
+    empty: function () {
 
-	center: function ( optionalTarget ) {
+        // this is a more robust check for empty than ( volume <= 0 ) because volume can get positive with two negative axes
 
-		var result = optionalTarget || new THREE.Vector3();
-		return result.addVectors( this.min, this.max ).multiplyScalar( 0.5 );
+        return (this.max.x < this.min.x) || (this.max.y < this.min.y) || (this.max.z < this.min.z);
 
-	},
+    },
 
-	size: function ( optionalTarget ) {
+    center: function (optionalTarget) {
 
-		var result = optionalTarget || new THREE.Vector3();
-		return result.subVectors( this.max, this.min );
+        var result = optionalTarget || new THREE.Vector3();
+        return result.addVectors(this.min, this.max).multiplyScalar(0.5);
 
-	},
+    },
 
-	expandByPoint: function ( point ) {
+    size: function (optionalTarget) {
 
-		this.min.min( point );
-		this.max.max( point );
+        var result = optionalTarget || new THREE.Vector3();
+        return result.subVectors(this.max, this.min);
 
-		return this;
+    },
 
-	},
+    expandByPoint: function (point) {
 
-	expandByVector: function ( vector ) {
+        this.min.min(point);
+        this.max.max(point);
 
-		this.min.sub( vector );
-		this.max.add( vector );
+        return this;
 
-		return this;
+    },
 
-	},
+    expandByVector: function (vector) {
 
-	expandByScalar: function ( scalar ) {
+        this.min.sub(vector);
+        this.max.add(vector);
 
-		this.min.addScalar( - scalar );
-		this.max.addScalar( scalar );
+        return this;
 
-		return this;
+    },
 
-	},
+    expandByScalar: function (scalar) {
 
-	containsPoint: function ( point ) {
+        this.min.addScalar(-scalar);
+        this.max.addScalar(scalar);
 
-		if ( point.x < this.min.x || point.x > this.max.x ||
+        return this;
+
+    },
+
+    containsPoint: function (point) {
+
+        if (point.x < this.min.x || point.x > this.max.x ||
 		     point.y < this.min.y || point.y > this.max.y ||
-		     point.z < this.min.z || point.z > this.max.z ) {
+		     point.z < this.min.z || point.z > this.max.z) {
 
-			return false;
+            return false;
 
-		}
+        }
 
-		return true;
+        return true;
 
-	},
+    },
 
-	containsBox: function ( box ) {
+    containsBox: function (box) {
 
-		if ( ( this.min.x <= box.min.x ) && ( box.max.x <= this.max.x ) &&
-			 ( this.min.y <= box.min.y ) && ( box.max.y <= this.max.y ) &&
-			 ( this.min.z <= box.min.z ) && ( box.max.z <= this.max.z ) ) {
+        if ((this.min.x <= box.min.x) && (box.max.x <= this.max.x) &&
+			 (this.min.y <= box.min.y) && (box.max.y <= this.max.y) &&
+			 (this.min.z <= box.min.z) && (box.max.z <= this.max.z)) {
 
-			return true;
+            return true;
 
-		}
+        }
 
-		return false;
+        return false;
 
-	},
+    },
 
-	getParameter: function ( point, optionalTarget ) {
+    getParameter: function (point, optionalTarget) {
 
-		// This can potentially have a divide by zero if the box
-		// has a size dimension of 0.
+        // This can potentially have a divide by zero if the box
+        // has a size dimension of 0.
 
-		var result = optionalTarget || new THREE.Vector3();
+        var result = optionalTarget || new THREE.Vector3();
 
-		return result.set(
-			( point.x - this.min.x ) / ( this.max.x - this.min.x ),
-			( point.y - this.min.y ) / ( this.max.y - this.min.y ),
-			( point.z - this.min.z ) / ( this.max.z - this.min.z )
+        return result.set(
+			(point.x - this.min.x) / (this.max.x - this.min.x),
+			(point.y - this.min.y) / (this.max.y - this.min.y),
+			(point.z - this.min.z) / (this.max.z - this.min.z)
 		);
 
-	},
+    },
 
-	isIntersectionBox: function ( box ) {
+    isIntersectionBox: function (box) {
 
-		// using 6 splitting planes to rule out intersections.
+        // using 6 splitting planes to rule out intersections.
 
-		if ( box.max.x < this.min.x || box.min.x > this.max.x ||
+        if (box.max.x < this.min.x || box.min.x > this.max.x ||
 		     box.max.y < this.min.y || box.min.y > this.max.y ||
-		     box.max.z < this.min.z || box.min.z > this.max.z ) {
+		     box.max.z < this.min.z || box.min.z > this.max.z) {
 
-			return false;
+            return false;
 
-		}
+        }
 
-		return true;
+        return true;
 
-	},
+    },
 
-	clampPoint: function ( point, optionalTarget ) {
+    clampPoint: function (point, optionalTarget) {
 
-		var result = optionalTarget || new THREE.Vector3();
-		return result.copy( point ).clamp( this.min, this.max );
+        var result = optionalTarget || new THREE.Vector3();
+        return result.copy(point).clamp(this.min, this.max);
 
-	},
+    },
 
-	distanceToPoint: function () {
+    distanceToPoint: function () {
 
-		var v1 = new THREE.Vector3();
+        var v1 = new THREE.Vector3();
 
-		return function ( point ) {
+        return function (point) {
 
-			var clampedPoint = v1.copy( point ).clamp( this.min, this.max );
-			return clampedPoint.sub( point ).length();
+            var clampedPoint = v1.copy(point).clamp(this.min, this.max);
+            return clampedPoint.sub(point).length();
 
-		};
+        };
 
-	}(),
+    }(),
 
-	getBoundingSphere: function () {
+    getBoundingSphere: function () {
 
-		var v1 = new THREE.Vector3();
+        var v1 = new THREE.Vector3();
 
-		return function ( optionalTarget ) {
+        return function (optionalTarget) {
 
-			var result = optionalTarget || new THREE.Sphere();
+            var result = optionalTarget || new THREE.Sphere();
 
-			result.center = this.center();
-			result.radius = this.size( v1 ).length() * 0.5;
+            result.center = this.center();
+            result.radius = this.size(v1).length() * 0.5;
 
-			return result;
+            return result;
 
-		};
+        };
 
-	}(),
+    }(),
 
-	intersect: function ( box ) {
+    intersect: function (box) {
 
-		this.min.max( box.min );
-		this.max.min( box.max );
+        this.min.max(box.min);
+        this.max.min(box.max);
 
-		return this;
+        return this;
 
-	},
+    },
 
-	union: function ( box ) {
+    union: function (box) {
 
-		this.min.min( box.min );
-		this.max.max( box.max );
+        this.min.min(box.min);
+        this.max.max(box.max);
 
-		return this;
+        return this;
 
-	},
+    },
 
-	applyMatrix4: function () {
+    applyMatrix4: function () {
 
-		var points = [
+        var points = [
 			new THREE.Vector3(),
 			new THREE.Vector3(),
 			new THREE.Vector3(),
@@ -4268,49 +4223,43 @@ THREE.Box3.prototype = {
 			new THREE.Vector3(),
 			new THREE.Vector3(),
 			new THREE.Vector3()
-		];
+        ];
 
-		return function ( matrix ) {
+        return function (matrix) {
 
-			// NOTE: I am using a binary pattern to specify all 2^3 combinations below
-			points[ 0 ].set( this.min.x, this.min.y, this.min.z ).applyMatrix4( matrix ); // 000
-			points[ 1 ].set( this.min.x, this.min.y, this.max.z ).applyMatrix4( matrix ); // 001
-			points[ 2 ].set( this.min.x, this.max.y, this.min.z ).applyMatrix4( matrix ); // 010
-			points[ 3 ].set( this.min.x, this.max.y, this.max.z ).applyMatrix4( matrix ); // 011
-			points[ 4 ].set( this.max.x, this.min.y, this.min.z ).applyMatrix4( matrix ); // 100
-			points[ 5 ].set( this.max.x, this.min.y, this.max.z ).applyMatrix4( matrix ); // 101
-			points[ 6 ].set( this.max.x, this.max.y, this.min.z ).applyMatrix4( matrix ); // 110
-			points[ 7 ].set( this.max.x, this.max.y, this.max.z ).applyMatrix4( matrix );  // 111
+            // NOTE: I am using a binary pattern to specify all 2^3 combinations below
+            points[0].set(this.min.x, this.min.y, this.min.z).applyMatrix4(matrix); // 000
+            points[1].set(this.min.x, this.min.y, this.max.z).applyMatrix4(matrix); // 001
+            points[2].set(this.min.x, this.max.y, this.min.z).applyMatrix4(matrix); // 010
+            points[3].set(this.min.x, this.max.y, this.max.z).applyMatrix4(matrix); // 011
+            points[4].set(this.max.x, this.min.y, this.min.z).applyMatrix4(matrix); // 100
+            points[5].set(this.max.x, this.min.y, this.max.z).applyMatrix4(matrix); // 101
+            points[6].set(this.max.x, this.max.y, this.min.z).applyMatrix4(matrix); // 110
+            points[7].set(this.max.x, this.max.y, this.max.z).applyMatrix4(matrix);  // 111
 
-			this.makeEmpty();
-			this.setFromPoints( points );
+            this.makeEmpty();
+            this.setFromPoints(points);
 
-			return this;
+            return this;
 
-		};
+        };
 
-	}(),
+    }(),
 
-	translate: function ( offset ) {
+    translate: function (offset) {
 
-		this.min.add( offset );
-		this.max.add( offset );
+        this.min.add(offset);
+        this.max.add(offset);
 
-		return this;
+        return this;
 
-	},
+    },
 
-	equals: function ( box ) {
+    equals: function (box) {
 
-		return box.min.equals( this.min ) && box.max.equals( this.max );
+        return box.min.equals(this.min) && box.max.equals(this.max);
 
-	},
-
-	clone: function () {
-
-		return new THREE.Box3().copy( this );
-
-	}
+    }
 
 };
 
@@ -4319,7 +4268,7 @@ THREE.Box3.prototype = {
 /**
  * @author alteredq / http://alteredqualia.com/
  * @author WestLangley / http://github.com/WestLangley
- * @author bhouston / http://exocortex.com
+ * @author bhouston / http://clara.io
  */
 
 THREE.Matrix3 = function () {
@@ -4334,7 +4283,7 @@ THREE.Matrix3 = function () {
 
 	if ( arguments.length > 0 ) {
 
-		THREE.error( 'THREE.Matrix3: the constructor no longer reads arguments. use .set() instead.' );
+		console.error( 'THREE.Matrix3: the constructor no longer reads arguments. use .set() instead.' );
 
 	}
 
@@ -4370,6 +4319,12 @@ THREE.Matrix3.prototype = {
 
 	},
 
+	clone: function () {
+
+		return new this.constructor().fromArray( this.elements );
+
+	},
+
 	copy: function ( m ) {
 
 		var me = m.elements;
@@ -4388,42 +4343,65 @@ THREE.Matrix3.prototype = {
 
 	multiplyVector3: function ( vector ) {
 
-		THREE.warn( 'THREE.Matrix3: .multiplyVector3() has been removed. Use vector.applyMatrix3( matrix ) instead.' );
+		console.warn( 'THREE.Matrix3: .multiplyVector3() has been removed. Use vector.applyMatrix3( matrix ) instead.' );
 		return vector.applyMatrix3( this );
 
 	},
 
 	multiplyVector3Array: function ( a ) {
 
-		THREE.warn( 'THREE.Matrix3: .multiplyVector3Array() has been renamed. Use matrix.applyToVector3Array( array ) instead.' );
+		console.warn( 'THREE.Matrix3: .multiplyVector3Array() has been renamed. Use matrix.applyToVector3Array( array ) instead.' );
 		return this.applyToVector3Array( a );
 
 	},
 
 	applyToVector3Array: function () {
 
-		var v1 = new THREE.Vector3();
+		var v1;
 
 		return function ( array, offset, length ) {
 
+			if ( v1 === undefined ) v1 = new THREE.Vector3();
 			if ( offset === undefined ) offset = 0;
 			if ( length === undefined ) length = array.length;
 
 			for ( var i = 0, j = offset; i < length; i += 3, j += 3 ) {
 
-				v1.x = array[ j ];
-				v1.y = array[ j + 1 ];
-				v1.z = array[ j + 2 ];
-
+				v1.fromArray( array, j );
 				v1.applyMatrix3( this );
-
-				array[ j ]     = v1.x;
-				array[ j + 1 ] = v1.y;
-				array[ j + 2 ] = v1.z;
+				v1.toArray( array, j );
 
 			}
 
 			return array;
+
+		};
+
+	}(),
+
+	applyToBuffer: function () {
+
+		var v1;
+
+		return function applyToBuffer( buffer, offset, length ) {
+
+			if ( v1 === undefined ) v1 = new THREE.Vector3();
+			if ( offset === undefined ) offset = 0;
+			if ( length === undefined ) length = buffer.length / buffer.itemSize;
+
+			for ( var i = 0, j = offset; i < length; i ++, j ++ ) {
+
+				v1.x = buffer.getX( j );
+				v1.y = buffer.getY( j );
+				v1.z = buffer.getZ( j );
+
+				v1.applyMatrix3( this );
+
+				buffer.setXYZ( v1.x, v1.y, v1.z );
+
+			}
+
+			return buffer;
 
 		};
 
@@ -4485,7 +4463,7 @@ THREE.Matrix3.prototype = {
 
 			} else {
 
-				THREE.warn( msg );
+				console.warn( msg );
 
 			}
 
@@ -4517,7 +4495,7 @@ THREE.Matrix3.prototype = {
 
 		var te = this.elements;
 
-		array[ offset     ] = te[ 0 ];
+		array[ offset ] = te[ 0 ];
 		array[ offset + 1 ] = te[ 1 ];
 		array[ offset + 2 ] = te[ 2 ];
 
@@ -4579,12 +4557,6 @@ THREE.Matrix3.prototype = {
 			te[ 6 ], te[ 7 ], te[ 8 ]
 		];
 
-	},
-
-	clone: function () {
-
-		return new THREE.Matrix3().fromArray( this.elements );
-
 	}
 
 };
@@ -4600,7 +4572,7 @@ THREE.Matrix3.prototype = {
  * @author alteredq / http://alteredqualia.com/
  * @author mikael emtinger / http://gomo.se/
  * @author timknip / http://www.floorplanner.com/
- * @author bhouston / http://exocortex.com
+ * @author bhouston / http://clara.io
  * @author WestLangley / http://github.com/WestLangley
  */
 
@@ -4617,7 +4589,7 @@ THREE.Matrix4 = function () {
 
 	if ( arguments.length > 0 ) {
 
-		THREE.error( 'THREE.Matrix4: the constructor no longer reads arguments. use .set() instead.' );
+		console.error( 'THREE.Matrix4: the constructor no longer reads arguments. use .set() instead.' );
 
 	}
 
@@ -4655,6 +4627,12 @@ THREE.Matrix4.prototype = {
 
 	},
 
+	clone: function () {
+
+		return new THREE.Matrix4().fromArray( this.elements );
+
+	},
+
 	copy: function ( m ) {
 
 		this.elements.set( m.elements );
@@ -4665,7 +4643,7 @@ THREE.Matrix4.prototype = {
 
 	extractPosition: function ( m ) {
 
-		THREE.warn( 'THREE.Matrix4: .extractPosition() has been renamed to .copyPosition().' );
+		console.warn( 'THREE.Matrix4: .extractPosition() has been renamed to .copyPosition().' );
 		return this.copyPosition( m );
 
 	},
@@ -4684,17 +4662,17 @@ THREE.Matrix4.prototype = {
 	},
 
 	extractBasis: function ( xAxis, yAxis, zAxis ) {
- 
+
 		var te = this.elements;
- 
+
 		xAxis.set( te[ 0 ], te[ 1 ], te[ 2 ] );
 		yAxis.set( te[ 4 ], te[ 5 ], te[ 6 ] );
 		zAxis.set( te[ 8 ], te[ 9 ], te[ 10 ] );
- 
+
 		return this;
- 		
+
 	},
- 
+
 	makeBasis: function ( xAxis, yAxis, zAxis ) {
 
 		this.set(
@@ -4710,9 +4688,11 @@ THREE.Matrix4.prototype = {
 
 	extractRotation: function () {
 
-		var v1 = new THREE.Vector3();
+		var v1;
 
 		return function ( m ) {
+
+			if ( v1 === undefined ) v1 = new THREE.Vector3();
 
 			var te = this.elements;
 			var me = m.elements;
@@ -4743,7 +4723,7 @@ THREE.Matrix4.prototype = {
 
 		if ( euler instanceof THREE.Euler === false ) {
 
-			THREE.error( 'THREE.Matrix: .makeRotationFromEuler() now expects a Euler rotation rather than a Vector3 and order.' );
+			console.error( 'THREE.Matrix: .makeRotationFromEuler() now expects a Euler rotation rather than a Vector3 and order.' );
 
 		}
 
@@ -4869,7 +4849,7 @@ THREE.Matrix4.prototype = {
 
 	setRotationFromQuaternion: function ( q ) {
 
-		THREE.warn( 'THREE.Matrix4: .setRotationFromQuaternion() has been renamed to .makeRotationFromQuaternion().' );
+		console.warn( 'THREE.Matrix4: .setRotationFromQuaternion() has been renamed to .makeRotationFromQuaternion().' );
 
 		return this.makeRotationFromQuaternion( q );
 
@@ -4914,17 +4894,19 @@ THREE.Matrix4.prototype = {
 
 	lookAt: function () {
 
-		var x = new THREE.Vector3();
-		var y = new THREE.Vector3();
-		var z = new THREE.Vector3();
+		var x, y, z;
 
 		return function ( eye, target, up ) {
+
+			if ( x === undefined ) x = new THREE.Vector3();
+			if ( y === undefined ) y = new THREE.Vector3();
+			if ( z === undefined ) z = new THREE.Vector3();
 
 			var te = this.elements;
 
 			z.subVectors( eye, target ).normalize();
 
-			if ( z.length() === 0 ) {
+			if ( z.lengthSq() === 0 ) {
 
 				z.z = 1;
 
@@ -4932,7 +4914,7 @@ THREE.Matrix4.prototype = {
 
 			x.crossVectors( up, z ).normalize();
 
-			if ( x.length() === 0 ) {
+			if ( x.lengthSq() === 0 ) {
 
 				z.x += 0.0001;
 				x.crossVectors( up, z ).normalize();
@@ -4956,7 +4938,7 @@ THREE.Matrix4.prototype = {
 
 		if ( n !== undefined ) {
 
-			THREE.warn( 'THREE.Matrix4: .multiply() now only accepts one argument. Use .multiplyMatrices( a, b ) instead.' );
+			console.warn( 'THREE.Matrix4: .multiply() now only accepts one argument. Use .multiplyMatrices( a, b ) instead.' );
 			return this.multiplyMatrices( m, n );
 
 		}
@@ -5035,45 +5017,40 @@ THREE.Matrix4.prototype = {
 
 	multiplyVector3: function ( vector ) {
 
-		THREE.warn( 'THREE.Matrix4: .multiplyVector3() has been removed. Use vector.applyMatrix4( matrix ) or vector.applyProjection( matrix ) instead.' );
+		console.warn( 'THREE.Matrix4: .multiplyVector3() has been removed. Use vector.applyMatrix4( matrix ) or vector.applyProjection( matrix ) instead.' );
 		return vector.applyProjection( this );
 
 	},
 
 	multiplyVector4: function ( vector ) {
 
-		THREE.warn( 'THREE.Matrix4: .multiplyVector4() has been removed. Use vector.applyMatrix4( matrix ) instead.' );
+		console.warn( 'THREE.Matrix4: .multiplyVector4() has been removed. Use vector.applyMatrix4( matrix ) instead.' );
 		return vector.applyMatrix4( this );
 
 	},
 
 	multiplyVector3Array: function ( a ) {
 
-		THREE.warn( 'THREE.Matrix4: .multiplyVector3Array() has been renamed. Use matrix.applyToVector3Array( array ) instead.' );
+		console.warn( 'THREE.Matrix4: .multiplyVector3Array() has been renamed. Use matrix.applyToVector3Array( array ) instead.' );
 		return this.applyToVector3Array( a );
 
 	},
 
 	applyToVector3Array: function () {
 
-		var v1 = new THREE.Vector3();
+		var v1;
 
 		return function ( array, offset, length ) {
 
+			if ( v1 === undefined ) v1 = new THREE.Vector3();
 			if ( offset === undefined ) offset = 0;
 			if ( length === undefined ) length = array.length;
 
 			for ( var i = 0, j = offset; i < length; i += 3, j += 3 ) {
 
-				v1.x = array[ j ];
-				v1.y = array[ j + 1 ];
-				v1.z = array[ j + 2 ];
-
+				v1.fromArray( array, j );
 				v1.applyMatrix4( this );
-
-				array[ j ]     = v1.x;
-				array[ j + 1 ] = v1.y;
-				array[ j + 2 ] = v1.z;
+				v1.toArray( array, j );
 
 			}
 
@@ -5083,9 +5060,37 @@ THREE.Matrix4.prototype = {
 
 	}(),
 
+	applyToBuffer: function () {
+
+		var v1;
+
+		return function applyToBuffer( buffer, offset, length ) {
+
+			if ( v1 === undefined ) v1 = new THREE.Vector3();
+			if ( offset === undefined ) offset = 0;
+			if ( length === undefined ) length = buffer.length / buffer.itemSize;
+
+			for ( var i = 0, j = offset; i < length; i ++, j ++ ) {
+
+				v1.x = buffer.getX( j );
+				v1.y = buffer.getY( j );
+				v1.z = buffer.getZ( j );
+
+				v1.applyMatrix4( this );
+
+				buffer.setXYZ( v1.x, v1.y, v1.z );
+
+			}
+
+			return buffer;
+
+		};
+
+	}(),
+
 	rotateAxis: function ( v ) {
 
-		THREE.warn( 'THREE.Matrix4: .rotateAxis() has been removed. Use Vector3.transformDirection( matrix ) instead.' );
+		console.warn( 'THREE.Matrix4: .rotateAxis() has been removed. Use Vector3.transformDirection( matrix ) instead.' );
 
 		v.transformDirection( this );
 
@@ -5093,7 +5098,7 @@ THREE.Matrix4.prototype = {
 
 	crossVector: function ( vector ) {
 
-		THREE.warn( 'THREE.Matrix4: .crossVector() has been removed. Use vector.applyMatrix4( matrix ) instead.' );
+		console.warn( 'THREE.Matrix4: .crossVector() has been removed. Use vector.applyMatrix4( matrix ) instead.' );
 		return vector.applyMatrix4( this );
 
 	},
@@ -5169,7 +5174,7 @@ THREE.Matrix4.prototype = {
 
 		var te = this.elements;
 
-		array[ offset     ] = te[ 0 ];
+		array[ offset ] = te[ 0 ];
 		array[ offset + 1 ] = te[ 1 ];
 		array[ offset + 2 ] = te[ 2 ];
 		array[ offset + 3 ] = te[ 3 ];
@@ -5195,11 +5200,12 @@ THREE.Matrix4.prototype = {
 
 	getPosition: function () {
 
-		var v1 = new THREE.Vector3();
+		var v1;
 
 		return function () {
 
-			THREE.warn( 'THREE.Matrix4: .getPosition() has been removed. Use Vector3.setFromMatrixPosition( matrix ) instead.' );
+			if ( v1 === undefined ) v1 = new THREE.Vector3();
+			console.warn( 'THREE.Matrix4: .getPosition() has been removed. Use Vector3.setFromMatrixPosition( matrix ) instead.' );
 
 			var te = this.elements;
 			return v1.set( te[ 12 ], te[ 13 ], te[ 14 ] );
@@ -5250,7 +5256,7 @@ THREE.Matrix4.prototype = {
 
 		var det = n11 * te[ 0 ] + n21 * te[ 4 ] + n31 * te[ 8 ] + n41 * te[ 12 ];
 
-		if ( det == 0 ) {
+		if ( det === 0 ) {
 
 			var msg = "THREE.Matrix4.getInverse(): can't invert matrix, determinant is 0";
 
@@ -5260,13 +5266,14 @@ THREE.Matrix4.prototype = {
 
 			} else {
 
-				THREE.warn( msg );
+				console.warn( msg );
 
 			}
 
 			this.identity();
 
 			return this;
+
 		}
 
 		this.multiplyScalar( 1 / det );
@@ -5277,31 +5284,31 @@ THREE.Matrix4.prototype = {
 
 	translate: function ( v ) {
 
-		THREE.error( 'THREE.Matrix4: .translate() has been removed.' );
+		console.error( 'THREE.Matrix4: .translate() has been removed.' );
 
 	},
 
 	rotateX: function ( angle ) {
 
-		THREE.error( 'THREE.Matrix4: .rotateX() has been removed.' );
+		console.error( 'THREE.Matrix4: .rotateX() has been removed.' );
 
 	},
 
 	rotateY: function ( angle ) {
 
-		THREE.error( 'THREE.Matrix4: .rotateY() has been removed.' );
+		console.error( 'THREE.Matrix4: .rotateY() has been removed.' );
 
 	},
 
 	rotateZ: function ( angle ) {
 
-		THREE.error( 'THREE.Matrix4: .rotateZ() has been removed.' );
+		console.error( 'THREE.Matrix4: .rotateZ() has been removed.' );
 
 	},
 
 	rotateByAxis: function ( axis, angle ) {
 
-		THREE.error( 'THREE.Matrix4: .rotateByAxis() has been removed.' );
+		console.error( 'THREE.Matrix4: .rotateByAxis() has been removed.' );
 
 	},
 
@@ -5327,7 +5334,7 @@ THREE.Matrix4.prototype = {
 		var scaleYSq = te[ 4 ] * te[ 4 ] + te[ 5 ] * te[ 5 ] + te[ 6 ] * te[ 6 ];
 		var scaleZSq = te[ 8 ] * te[ 8 ] + te[ 9 ] * te[ 9 ] + te[ 10 ] * te[ 10 ];
 
-		return Math.sqrt( Math.max( scaleXSq, Math.max( scaleYSq, scaleZSq ) ) );
+		return Math.sqrt( Math.max( scaleXSq, scaleYSq, scaleZSq ) );
 
 	},
 
@@ -5447,10 +5454,12 @@ THREE.Matrix4.prototype = {
 
 	decompose: function () {
 
-		var vector = new THREE.Vector3();
-		var matrix = new THREE.Matrix4();
+		var vector, matrix;
 
 		return function ( position, quaternion, scale ) {
+
+			if ( vector === undefined ) vector = new THREE.Vector3();
+			if ( matrix === undefined ) matrix = new THREE.Matrix4();
 
 			var te = this.elements;
 
@@ -5461,7 +5470,9 @@ THREE.Matrix4.prototype = {
 			// if determine is negative, we need to invert one scale
 			var det = this.determinant();
 			if ( det < 0 ) {
+
 				sx = - sx;
+
 			}
 
 			position.x = te[ 12 ];
@@ -5551,6 +5562,21 @@ THREE.Matrix4.prototype = {
 
 	},
 
+	equals: function ( matrix ) {
+
+		var te = this.elements;
+		var me = matrix.elements;
+
+		for ( var i = 0; i < 16; i ++ ) {
+
+			if ( te[ i ] !== me[ i ] ) return false;
+
+		}
+
+		return true;
+
+	},
+
 	fromArray: function ( array ) {
 
 		this.elements.set( array );
@@ -5570,12 +5596,6 @@ THREE.Matrix4.prototype = {
 			te[ 12 ], te[ 13 ], te[ 14 ], te[ 15 ]
 		];
 
-	},
-
-	clone: function () {
-
-		return new THREE.Matrix4().fromArray( this.elements );
-
 	}
 
 };
@@ -5583,7 +5603,7 @@ THREE.Matrix4.prototype = {
 // File:src/math/Ray.js
 
 /**
- * @author bhouston / http://exocortex.com
+ * @author bhouston / http://clara.io
  */
 
 THREE.Ray = function ( origin, direction ) {
@@ -5603,6 +5623,12 @@ THREE.Ray.prototype = {
 		this.direction.copy( direction );
 
 		return this;
+
+	},
+
+	clone: function () {
+
+		return new this.constructor().copy( this );
 
 	},
 
@@ -5653,7 +5679,13 @@ THREE.Ray.prototype = {
 
 	},
 
-	distanceToPoint: function () {
+	distanceToPoint: function ( point ) {
+
+		return Math.sqrt( this.distanceSqToPoint( point ) );
+
+	},
+
+	distanceSqToPoint: function () {
 
 		var v1 = new THREE.Vector3();
 
@@ -5665,13 +5697,13 @@ THREE.Ray.prototype = {
 
 			if ( directionDistance < 0 ) {
 
-				return this.origin.distanceTo( point );
+				return this.origin.distanceToSquared( point );
 
 			}
 
 			v1.copy( this.direction ).multiplyScalar( directionDistance ).add( this.origin );
 
-			return v1.distanceTo( point );
+			return v1.distanceToSquared( point );
 
 		};
 
@@ -5845,7 +5877,7 @@ THREE.Ray.prototype = {
 			// in order to always return an intersect point that is in front of the ray.
 			if ( t0 < 0 ) return this.at( t1, optionalTarget );
 
-			// else t0 is in front of the ray, so return the first collision point scaled by t0 
+			// else t0 is in front of the ray, so return the first collision point scaled by t0
 			return this.at( t0, optionalTarget );
 
 		}
@@ -5881,10 +5913,10 @@ THREE.Ray.prototype = {
 	distanceToPlane: function ( plane ) {
 
 		var denominator = plane.normal.dot( this.direction );
-		if ( denominator == 0 ) {
+		if ( denominator === 0 ) {
 
 			// line is coplanar, return origin
-			if ( plane.distanceToPoint( this.origin ) == 0 ) {
+			if ( plane.distanceToPoint( this.origin ) === 0 ) {
 
 				return 0;
 
@@ -5911,6 +5943,7 @@ THREE.Ray.prototype = {
 		if ( t === null ) {
 
 			return null;
+
 		}
 
 		return this.at( t, optionalTarget );
@@ -5933,7 +5966,7 @@ THREE.Ray.prototype = {
 
 		// http://www.scratchapixel.com/lessons/3d-basic-lessons/lesson-7-intersecting-simple-shapes/ray-box-intersection/
 
-		var tmin,tmax,tymin,tymax,tzmin,tzmax;
+		var tmin, tmax, tymin, tymax, tzmin, tzmax;
 
 		var invdirx = 1 / this.direction.x,
 			invdiry = 1 / this.direction.y,
@@ -5950,6 +5983,7 @@ THREE.Ray.prototype = {
 
 			tmin = ( box.max.x - origin.x ) * invdirx;
 			tmax = ( box.min.x - origin.x ) * invdirx;
+
 		}
 
 		if ( invdiry >= 0 ) {
@@ -5961,6 +5995,7 @@ THREE.Ray.prototype = {
 
 			tymin = ( box.max.y - origin.y ) * invdiry;
 			tymax = ( box.min.y - origin.y ) * invdiry;
+
 		}
 
 		if ( ( tmin > tymax ) || ( tymin > tmax ) ) return null;
@@ -5981,6 +6016,7 @@ THREE.Ray.prototype = {
 
 			tzmin = ( box.max.z - origin.z ) * invdirz;
 			tzmax = ( box.min.z - origin.z ) * invdirz;
+
 		}
 
 		if ( ( tmin > tzmax ) || ( tzmin > tmax ) ) return null;
@@ -6088,17 +6124,12 @@ THREE.Ray.prototype = {
 		this.direction.normalize();
 
 		return this;
+
 	},
 
 	equals: function ( ray ) {
 
 		return ray.origin.equals( this.origin ) && ray.direction.equals( this.direction );
-
-	},
-
-	clone: function () {
-
-		return new THREE.Ray().copy( this );
 
 	}
 
@@ -6107,7 +6138,7 @@ THREE.Ray.prototype = {
 // File:src/math/Sphere.js
 
 /**
- * @author bhouston / http://exocortex.com
+ * @author bhouston / http://clara.io
  * @author mrdoob / http://mrdoob.com/
  */
 
@@ -6128,6 +6159,7 @@ THREE.Sphere.prototype = {
 		this.radius = radius;
 
 		return this;
+
 	},
 
 	setFromPoints: function () {
@@ -6163,6 +6195,12 @@ THREE.Sphere.prototype = {
 		};
 
 	}(),
+
+	clone: function () {
+
+		return new this.constructor().copy( this );
+
+	},
 
 	copy: function ( sphere ) {
 
@@ -6249,12 +6287,6 @@ THREE.Sphere.prototype = {
 
 		return sphere.center.equals( this.center ) && ( sphere.radius === this.radius );
 
-	},
-
-	clone: function () {
-
-		return new THREE.Sphere().copy( this );
-
 	}
 
 };
@@ -6264,7 +6296,7 @@ THREE.Sphere.prototype = {
 /**
  * @author mrdoob / http://mrdoob.com/
  * @author alteredq / http://alteredqualia.com/
- * @author bhouston / http://exocortex.com
+ * @author bhouston / http://clara.io
  */
 
 THREE.Frustum = function ( p0, p1, p2, p3, p4, p5 ) {
@@ -6298,6 +6330,12 @@ THREE.Frustum.prototype = {
 		planes[ 5 ].copy( p5 );
 
 		return this;
+
+	},
+
+	clone: function () {
+
+		return new this.constructor().copy( this );
 
 	},
 
@@ -6406,9 +6444,11 @@ THREE.Frustum.prototype = {
 					return false;
 
 				}
+
 			}
 
 			return true;
+
 		};
 
 	}(),
@@ -6430,12 +6470,6 @@ THREE.Frustum.prototype = {
 
 		return true;
 
-	},
-
-	clone: function () {
-
-		return new THREE.Frustum().copy( this );
-
 	}
 
 };
@@ -6443,7 +6477,7 @@ THREE.Frustum.prototype = {
 // File:src/math/Plane.js
 
 /**
- * @author bhouston / http://exocortex.com
+ * @author bhouston / http://clara.io
  */
 
 THREE.Plane = function ( normal, constant ) {
@@ -6503,6 +6537,11 @@ THREE.Plane.prototype = {
 
 	}(),
 
+	clone: function () {
+
+		return new this.constructor().copy( this );
+
+	},
 
 	copy: function ( plane ) {
 
@@ -6584,10 +6623,10 @@ THREE.Plane.prototype = {
 
 			var denominator = this.normal.dot( direction );
 
-			if ( denominator == 0 ) {
+			if ( denominator === 0 ) {
 
 				// line is coplanar, return origin
-				if ( this.distanceToPoint( line.start ) == 0 ) {
+				if ( this.distanceToPoint( line.start ) === 0 ) {
 
 					return result.copy( line.start );
 
@@ -6654,13 +6693,7 @@ THREE.Plane.prototype = {
 
 	equals: function ( plane ) {
 
-		return plane.normal.equals( this.normal ) && ( plane.constant == this.constant );
-
-	},
-
-	clone: function () {
-
-		return new THREE.Plane().copy( this );
+		return plane.normal.equals( this.normal ) && ( plane.constant === this.constant );
 
 	}
 
@@ -6675,166 +6708,172 @@ THREE.Plane.prototype = {
 
 THREE.Math = {
 
-	generateUUID: function () {
+    generateUUID: function () {
 
-		// http://www.broofa.com/Tools/Math.uuid.htm
+        // http://www.broofa.com/Tools/Math.uuid.htm
 
-		var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split( '' );
-		var uuid = new Array( 36 );
-		var rnd = 0, r;
+        var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
+        var uuid = new Array(36);
+        var rnd = 0, r;
 
-		return function () {
+        return function () {
 
-			for ( var i = 0; i < 36; i ++ ) {
+            for (var i = 0; i < 36; i++) {
 
-				if ( i == 8 || i == 13 || i == 18 || i == 23 ) {
+                if (i === 8 || i === 13 || i === 18 || i === 23) {
 
-					uuid[ i ] = '-';
+                    uuid[i] = '-';
 
-				} else if ( i == 14 ) {
+                } else if (i === 14) {
 
-					uuid[ i ] = '4';
+                    uuid[i] = '4';
 
-				} else {
+                } else {
 
-					if ( rnd <= 0x02 ) rnd = 0x2000000 + ( Math.random() * 0x1000000 ) | 0;
-					r = rnd & 0xf;
-					rnd = rnd >> 4;
-					uuid[ i ] = chars[ ( i == 19 ) ? ( r & 0x3 ) | 0x8 : r ];
+                    if (rnd <= 0x02) rnd = 0x2000000 + (Math.random() * 0x1000000) | 0;
+                    r = rnd & 0xf;
+                    rnd = rnd >> 4;
+                    uuid[i] = chars[(i === 19) ? (r & 0x3) | 0x8 : r];
 
-				}
-			}
+                }
 
-			return uuid.join( '' );
+            }
 
-		};
+            return uuid.join('');
 
-	}(),
+        };
 
-	// Clamp value to range <a, b>
+    }(),
 
-	clamp: function ( x, a, b ) {
+    clamp: function (value, min, max) {
 
-		return ( x < a ) ? a : ( ( x > b ) ? b : x );
+        return Math.max(min, Math.min(max, value));
 
-	},
+    },
 
-	// Clamp value to range <a, inf)
+    // compute euclidian modulo of m % n
+    // https://en.wikipedia.org/wiki/Modulo_operation
 
-	clampBottom: function ( x, a ) {
+    euclideanModulo: function (n, m) {
 
-		return x < a ? a : x;
+        return ((n % m) + m) % m;
 
-	},
+    },
 
-	// Linear mapping from range <a1, a2> to range <b1, b2>
+    // Linear mapping from range <a1, a2> to range <b1, b2>
 
-	mapLinear: function ( x, a1, a2, b1, b2 ) {
+    mapLinear: function (x, a1, a2, b1, b2) {
 
-		return b1 + ( x - a1 ) * ( b2 - b1 ) / ( a2 - a1 );
+        return b1 + (x - a1) * (b2 - b1) / (a2 - a1);
 
-	},
+    },
 
-	// http://en.wikipedia.org/wiki/Smoothstep
+    // http://en.wikipedia.org/wiki/Smoothstep
 
-	smoothstep: function ( x, min, max ) {
+    smoothstep: function (x, min, max) {
 
-		if ( x <= min ) return 0;
-		if ( x >= max ) return 1;
+        if (x <= min) return 0;
+        if (x >= max) return 1;
 
-		x = ( x - min ) / ( max - min );
+        x = (x - min) / (max - min);
 
-		return x * x * ( 3 - 2 * x );
+        return x * x * (3 - 2 * x);
 
-	},
+    },
 
-	smootherstep: function ( x, min, max ) {
+    smootherstep: function (x, min, max) {
 
-		if ( x <= min ) return 0;
-		if ( x >= max ) return 1;
+        if (x <= min) return 0;
+        if (x >= max) return 1;
 
-		x = ( x - min ) / ( max - min );
+        x = (x - min) / (max - min);
 
-		return x * x * x * ( x * ( x * 6 - 15 ) + 10 );
+        return x * x * x * (x * (x * 6 - 15) + 10);
 
-	},
+    },
 
-	// Random float from <0, 1> with 16 bits of randomness
-	// (standard Math.random() creates repetitive patterns when applied over larger space)
+    // Random float from <0, 1> with 16 bits of randomness
+    // (standard Math.random() creates repetitive patterns when applied over larger space)
 
-	random16: function () {
+    random16: function () {
 
-		return ( 65280 * Math.random() + 255 * Math.random() ) / 65535;
+        return (65280 * Math.random() + 255 * Math.random()) / 65535;
 
-	},
+    },
 
-	// Random integer from <low, high> interval
+    // Random integer from <low, high> interval
 
-	randInt: function ( low, high ) {
+    randInt: function (low, high) {
 
-		return Math.floor( this.randFloat( low, high ) );
+        return low + Math.floor(Math.random() * (high - low + 1));
 
-	},
+    },
 
-	// Random float from <low, high> interval
+    // Random float from <low, high> interval
 
-	randFloat: function ( low, high ) {
+    randFloat: function (low, high) {
 
-		return low + Math.random() * ( high - low );
+        return low + Math.random() * (high - low);
 
-	},
+    },
 
-	// Random float from <-range/2, range/2> interval
+    // Random float from <-range/2, range/2> interval
 
-	randFloatSpread: function ( range ) {
+    randFloatSpread: function (range) {
 
-		return range * ( 0.5 - Math.random() );
+        return range * (0.5 - Math.random());
 
-	},
+    },
 
-	degToRad: function () {
+    degToRad: function () {
 
-		var degreeToRadiansFactor = Math.PI / 180;
+        var degreeToRadiansFactor = Math.PI / 180;
 
-		return function ( degrees ) {
+        return function (degrees) {
 
-			return degrees * degreeToRadiansFactor;
+            return degrees * degreeToRadiansFactor;
 
-		};
+        };
 
-	}(),
+    }(),
 
-	radToDeg: function () {
+    radToDeg: function () {
 
-		var radianToDegreesFactor = 180 / Math.PI;
+        var radianToDegreesFactor = 180 / Math.PI;
 
-		return function ( radians ) {
+        return function (radians) {
 
-			return radians * radianToDegreesFactor;
+            return radians * radianToDegreesFactor;
 
-		};
+        };
 
-	}(),
+    }(),
 
-	isPowerOfTwo: function ( value ) {
+    isPowerOfTwo: function (value) {
 
-		return ( value & ( value - 1 ) ) === 0 && value !== 0;
+        return (value & (value - 1)) === 0 && value !== 0;
 
-	},
+    },
 
-	nextPowerOfTwo: function ( value ) {
+    nearestPowerOfTwo: function (value) {
 
-		value --;
-		value |= value >> 1;
-		value |= value >> 2;
-		value |= value >> 4;
-		value |= value >> 8;
-		value |= value >> 16;
-		value ++;
+        return Math.pow(2, Math.round(Math.log(value) / Math.LN2));
 
-		return value;
+    },
 
-	}
+    nextPowerOfTwo: function (value) {
+
+        value--;
+        value |= value >> 1;
+        value |= value >> 2;
+        value |= value >> 4;
+        value |= value >> 8;
+        value |= value >> 16;
+        value++;
+
+        return value;
+
+    }
 
 };
 
@@ -6848,124 +6887,124 @@ THREE.Math = {
  * @author alteredq / http://alteredqualia.com/
  */
 
-THREE.Spline = function ( points ) {
+THREE.Spline = function (points) {
 
-	this.points = points;
+    this.points = points;
 
-	var c = [], v3 = { x: 0, y: 0, z: 0 },
+    var c = [], v3 = { x: 0, y: 0, z: 0 },
 	point, intPoint, weight, w2, w3,
 	pa, pb, pc, pd;
 
-	this.initFromArray = function ( a ) {
+    this.initFromArray = function (a) {
 
-		this.points = [];
+        this.points = [];
 
-		for ( var i = 0; i < a.length; i ++ ) {
+        for (var i = 0; i < a.length; i++) {
 
-			this.points[ i ] = { x: a[ i ][ 0 ], y: a[ i ][ 1 ], z: a[ i ][ 2 ] };
+            this.points[i] = { x: a[i][0], y: a[i][1], z: a[i][2] };
 
-		}
+        }
 
-	};
+    };
 
-	this.getPoint = function ( k ) {
+    this.getPoint = function (k) {
 
-		point = ( this.points.length - 1 ) * k;
-		intPoint = Math.floor( point );
-		weight = point - intPoint;
+        point = (this.points.length - 1) * k;
+        intPoint = Math.floor(point);
+        weight = point - intPoint;
 
-		c[ 0 ] = intPoint === 0 ? intPoint : intPoint - 1;
-		c[ 1 ] = intPoint;
-		c[ 2 ] = intPoint  > this.points.length - 2 ? this.points.length - 1 : intPoint + 1;
-		c[ 3 ] = intPoint  > this.points.length - 3 ? this.points.length - 1 : intPoint + 2;
+        c[0] = intPoint === 0 ? intPoint : intPoint - 1;
+        c[1] = intPoint;
+        c[2] = intPoint > this.points.length - 2 ? this.points.length - 1 : intPoint + 1;
+        c[3] = intPoint > this.points.length - 3 ? this.points.length - 1 : intPoint + 2;
 
-		pa = this.points[ c[ 0 ] ];
-		pb = this.points[ c[ 1 ] ];
-		pc = this.points[ c[ 2 ] ];
-		pd = this.points[ c[ 3 ] ];
+        pa = this.points[c[0]];
+        pb = this.points[c[1]];
+        pc = this.points[c[2]];
+        pd = this.points[c[3]];
 
-		w2 = weight * weight;
-		w3 = weight * w2;
+        w2 = weight * weight;
+        w3 = weight * w2;
 
-		v3.x = interpolate( pa.x, pb.x, pc.x, pd.x, weight, w2, w3 );
-		v3.y = interpolate( pa.y, pb.y, pc.y, pd.y, weight, w2, w3 );
-		v3.z = interpolate( pa.z, pb.z, pc.z, pd.z, weight, w2, w3 );
+        v3.x = interpolate(pa.x, pb.x, pc.x, pd.x, weight, w2, w3);
+        v3.y = interpolate(pa.y, pb.y, pc.y, pd.y, weight, w2, w3);
+        v3.z = interpolate(pa.z, pb.z, pc.z, pd.z, weight, w2, w3);
 
-		return v3;
+        return v3;
 
-	};
+    };
 
-	this.getControlPointsArray = function () {
+    this.getControlPointsArray = function () {
 
-		var i, p, l = this.points.length,
+        var i, p, l = this.points.length,
 			coords = [];
 
-		for ( i = 0; i < l; i ++ ) {
+        for (i = 0; i < l; i++) {
 
-			p = this.points[ i ];
-			coords[ i ] = [ p.x, p.y, p.z ];
+            p = this.points[i];
+            coords[i] = [p.x, p.y, p.z];
 
-		}
+        }
 
-		return coords;
+        return coords;
 
-	};
+    };
 
-	// approximate length by summing linear segments
+    // approximate length by summing linear segments
 
-	this.getLength = function ( nSubDivisions ) {
+    this.getLength = function (nSubDivisions) {
 
-		var i, index, nSamples, position,
+        var i, index, nSamples, position,
 			point = 0, intPoint = 0, oldIntPoint = 0,
 			oldPosition = new THREE.Vector3(),
 			tmpVec = new THREE.Vector3(),
 			chunkLengths = [],
 			totalLength = 0;
 
-		// first point has 0 length
+        // first point has 0 length
 
-		chunkLengths[ 0 ] = 0;
+        chunkLengths[0] = 0;
 
-		if ( ! nSubDivisions ) nSubDivisions = 100;
+        if (!nSubDivisions) nSubDivisions = 100;
 
-		nSamples = this.points.length * nSubDivisions;
+        nSamples = this.points.length * nSubDivisions;
 
-		oldPosition.copy( this.points[ 0 ] );
+        oldPosition.copy(this.points[0]);
 
-		for ( i = 1; i < nSamples; i ++ ) {
+        for (i = 1; i < nSamples; i++) {
 
-			index = i / nSamples;
+            index = i / nSamples;
 
-			position = this.getPoint( index );
-			tmpVec.copy( position );
+            position = this.getPoint(index);
+            tmpVec.copy(position);
 
-			totalLength += tmpVec.distanceTo( oldPosition );
+            totalLength += tmpVec.distanceTo(oldPosition);
 
-			oldPosition.copy( position );
+            oldPosition.copy(position);
 
-			point = ( this.points.length - 1 ) * index;
-			intPoint = Math.floor( point );
+            point = (this.points.length - 1) * index;
+            intPoint = Math.floor(point);
 
-			if ( intPoint != oldIntPoint ) {
+            if (intPoint !== oldIntPoint) {
 
-				chunkLengths[ intPoint ] = totalLength;
-				oldIntPoint = intPoint;
+                chunkLengths[intPoint] = totalLength;
+                oldIntPoint = intPoint;
 
-			}
+            }
 
-		}
+        }
 
-		// last point ends with total length
+        // last point ends with total length
 
-		chunkLengths[ chunkLengths.length ] = totalLength;
+        chunkLengths[chunkLengths.length] = totalLength;
 
-		return { chunks: chunkLengths, total: totalLength };
+        return { chunks: chunkLengths, total: totalLength };
 
-	};
+    };
 
-	this.reparametrizeByArcLength = function ( samplingCoef ) {
+    this.reparametrizeByArcLength = function (samplingCoef) {
 
-		var i, j,
+        var i, j,
 			index, indexCurrent, indexNext,
 			realDistance,
 			sampling, position,
@@ -6973,240 +7012,284 @@ THREE.Spline = function ( points ) {
 			tmpVec = new THREE.Vector3(),
 			sl = this.getLength();
 
-		newpoints.push( tmpVec.copy( this.points[ 0 ] ).clone() );
+        newpoints.push(tmpVec.copy(this.points[0]).clone());
 
-		for ( i = 1; i < this.points.length; i ++ ) {
+        for (i = 1; i < this.points.length; i++) {
 
-			//tmpVec.copy( this.points[ i - 1 ] );
-			//linearDistance = tmpVec.distanceTo( this.points[ i ] );
+            //tmpVec.copy( this.points[ i - 1 ] );
+            //linearDistance = tmpVec.distanceTo( this.points[ i ] );
 
-			realDistance = sl.chunks[ i ] - sl.chunks[ i - 1 ];
+            realDistance = sl.chunks[i] - sl.chunks[i - 1];
 
-			sampling = Math.ceil( samplingCoef * realDistance / sl.total );
+            sampling = Math.ceil(samplingCoef * realDistance / sl.total);
 
-			indexCurrent = ( i - 1 ) / ( this.points.length - 1 );
-			indexNext = i / ( this.points.length - 1 );
+            indexCurrent = (i - 1) / (this.points.length - 1);
+            indexNext = i / (this.points.length - 1);
 
-			for ( j = 1; j < sampling - 1; j ++ ) {
+            for (j = 1; j < sampling - 1; j++) {
 
-				index = indexCurrent + j * ( 1 / sampling ) * ( indexNext - indexCurrent );
+                index = indexCurrent + j * (1 / sampling) * (indexNext - indexCurrent);
 
-				position = this.getPoint( index );
-				newpoints.push( tmpVec.copy( position ).clone() );
+                position = this.getPoint(index);
+                newpoints.push(tmpVec.copy(position).clone());
 
-			}
+            }
 
-			newpoints.push( tmpVec.copy( this.points[ i ] ).clone() );
+            newpoints.push(tmpVec.copy(this.points[i]).clone());
 
-		}
+        }
 
-		this.points = newpoints;
+        this.points = newpoints;
 
-	};
+    };
 
-	// Catmull-Rom
+    // Catmull-Rom
 
-	function interpolate( p0, p1, p2, p3, t, t2, t3 ) {
+    function interpolate(p0, p1, p2, p3, t, t2, t3) {
 
-		var v0 = ( p2 - p0 ) * 0.5,
-			v1 = ( p3 - p1 ) * 0.5;
+        var v0 = (p2 - p0) * 0.5,
+			v1 = (p3 - p1) * 0.5;
 
-		return ( 2 * ( p1 - p2 ) + v0 + v1 ) * t3 + ( - 3 * ( p1 - p2 ) - 2 * v0 - v1 ) * t2 + v0 * t + p1;
+        return (2 * (p1 - p2) + v0 + v1) * t3 + (-3 * (p1 - p2) - 2 * v0 - v1) * t2 + v0 * t + p1;
 
-	};
+    }
 
 };
 
 // File:src/math/Triangle.js
 
 /**
- * @author bhouston / http://exocortex.com
+ * @author bhouston / http://clara.io
  * @author mrdoob / http://mrdoob.com/
  */
 
-THREE.Triangle = function ( a, b, c ) {
+THREE.Triangle = function (a, b, c) {
 
-	this.a = ( a !== undefined ) ? a : new THREE.Vector3();
-	this.b = ( b !== undefined ) ? b : new THREE.Vector3();
-	this.c = ( c !== undefined ) ? c : new THREE.Vector3();
+    this.a = (a !== undefined) ? a : new THREE.Vector3();
+    this.b = (b !== undefined) ? b : new THREE.Vector3();
+    this.c = (c !== undefined) ? c : new THREE.Vector3();
 
 };
 
 THREE.Triangle.normal = function () {
 
-	var v0 = new THREE.Vector3();
+    var v0 = new THREE.Vector3();
 
-	return function ( a, b, c, optionalTarget ) {
+    return function (a, b, c, optionalTarget) {
 
-		var result = optionalTarget || new THREE.Vector3();
+        var result = optionalTarget || new THREE.Vector3();
 
-		result.subVectors( c, b );
-		v0.subVectors( a, b );
-		result.cross( v0 );
+        result.subVectors(c, b);
+        v0.subVectors(a, b);
+        result.cross(v0);
 
-		var resultLengthSq = result.lengthSq();
-		if ( resultLengthSq > 0 ) {
+        var resultLengthSq = result.lengthSq();
+        if (resultLengthSq > 0) {
 
-			return result.multiplyScalar( 1 / Math.sqrt( resultLengthSq ) );
+            return result.multiplyScalar(1 / Math.sqrt(resultLengthSq));
 
-		}
+        }
 
-		return result.set( 0, 0, 0 );
+        return result.set(0, 0, 0);
 
-	};
+    };
 
 }();
 
-// static/instance method to calculate barycoordinates
+// static/instance method to calculate barycentric coordinates
 // based on: http://www.blackpawn.com/texts/pointinpoly/default.html
 THREE.Triangle.barycoordFromPoint = function () {
 
-	var v0 = new THREE.Vector3();
-	var v1 = new THREE.Vector3();
-	var v2 = new THREE.Vector3();
+    var v0 = new THREE.Vector3();
+    var v1 = new THREE.Vector3();
+    var v2 = new THREE.Vector3();
 
-	return function ( point, a, b, c, optionalTarget ) {
+    return function (point, a, b, c, optionalTarget) {
 
-		v0.subVectors( c, a );
-		v1.subVectors( b, a );
-		v2.subVectors( point, a );
+        v0.subVectors(c, a);
+        v1.subVectors(b, a);
+        v2.subVectors(point, a);
 
-		var dot00 = v0.dot( v0 );
-		var dot01 = v0.dot( v1 );
-		var dot02 = v0.dot( v2 );
-		var dot11 = v1.dot( v1 );
-		var dot12 = v1.dot( v2 );
+        var dot00 = v0.dot(v0);
+        var dot01 = v0.dot(v1);
+        var dot02 = v0.dot(v2);
+        var dot11 = v1.dot(v1);
+        var dot12 = v1.dot(v2);
 
-		var denom = ( dot00 * dot11 - dot01 * dot01 );
+        var denom = (dot00 * dot11 - dot01 * dot01);
 
-		var result = optionalTarget || new THREE.Vector3();
+        var result = optionalTarget || new THREE.Vector3();
 
-		// colinear or singular triangle
-		if ( denom == 0 ) {
-			// arbitrary location outside of triangle?
-			// not sure if this is the best idea, maybe should be returning undefined
-			return result.set( - 2, - 1, - 1 );
-		}
+        // collinear or singular triangle
+        if (denom === 0) {
 
-		var invDenom = 1 / denom;
-		var u = ( dot11 * dot02 - dot01 * dot12 ) * invDenom;
-		var v = ( dot00 * dot12 - dot01 * dot02 ) * invDenom;
+            // arbitrary location outside of triangle?
+            // not sure if this is the best idea, maybe should be returning undefined
+            return result.set(-2, -1, -1);
 
-		// barycoordinates must always sum to 1
-		return result.set( 1 - u - v, v, u );
+        }
 
-	};
+        var invDenom = 1 / denom;
+        var u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+        var v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+
+        // barycentric coordinates must always sum to 1
+        return result.set(1 - u - v, v, u);
+
+    };
 
 }();
 
 THREE.Triangle.containsPoint = function () {
 
-	var v1 = new THREE.Vector3();
+    var v1 = new THREE.Vector3();
 
-	return function ( point, a, b, c ) {
+    return function (point, a, b, c) {
 
-		var result = THREE.Triangle.barycoordFromPoint( point, a, b, c, v1 );
+        var result = THREE.Triangle.barycoordFromPoint(point, a, b, c, v1);
 
-		return ( result.x >= 0 ) && ( result.y >= 0 ) && ( ( result.x + result.y ) <= 1 );
+        return (result.x >= 0) && (result.y >= 0) && ((result.x + result.y) <= 1);
 
-	};
+    };
 
 }();
 
 THREE.Triangle.prototype = {
 
-	constructor: THREE.Triangle,
+    constructor: THREE.Triangle,
 
-	set: function ( a, b, c ) {
+    set: function (a, b, c) {
 
-		this.a.copy( a );
-		this.b.copy( b );
-		this.c.copy( c );
+        this.a.copy(a);
+        this.b.copy(b);
+        this.c.copy(c);
 
-		return this;
+        return this;
 
-	},
+    },
 
-	setFromPointsAndIndices: function ( points, i0, i1, i2 ) {
+    setFromPointsAndIndices: function (points, i0, i1, i2) {
 
-		this.a.copy( points[ i0 ] );
-		this.b.copy( points[ i1 ] );
-		this.c.copy( points[ i2 ] );
+        this.a.copy(points[i0]);
+        this.b.copy(points[i1]);
+        this.c.copy(points[i2]);
 
-		return this;
+        return this;
 
-	},
+    },
 
-	copy: function ( triangle ) {
+    clone: function () {
 
-		this.a.copy( triangle.a );
-		this.b.copy( triangle.b );
-		this.c.copy( triangle.c );
+        return new this.constructor().copy(this);
 
-		return this;
+    },
 
-	},
+    copy: function (triangle) {
 
-	area: function () {
+        this.a.copy(triangle.a);
+        this.b.copy(triangle.b);
+        this.c.copy(triangle.c);
 
-		var v0 = new THREE.Vector3();
-		var v1 = new THREE.Vector3();
+        return this;
 
-		return function () {
+    },
 
-			v0.subVectors( this.c, this.b );
-			v1.subVectors( this.a, this.b );
+    area: function () {
 
-			return v0.cross( v1 ).length() * 0.5;
+        var v0 = new THREE.Vector3();
+        var v1 = new THREE.Vector3();
 
-		};
+        return function () {
 
-	}(),
+            v0.subVectors(this.c, this.b);
+            v1.subVectors(this.a, this.b);
 
-	midpoint: function ( optionalTarget ) {
+            return v0.cross(v1).length() * 0.5;
 
-		var result = optionalTarget || new THREE.Vector3();
-		return result.addVectors( this.a, this.b ).add( this.c ).multiplyScalar( 1 / 3 );
+        };
 
-	},
+    }(),
 
-	normal: function ( optionalTarget ) {
+    midpoint: function (optionalTarget) {
 
-		return THREE.Triangle.normal( this.a, this.b, this.c, optionalTarget );
+        var result = optionalTarget || new THREE.Vector3();
+        return result.addVectors(this.a, this.b).add(this.c).multiplyScalar(1 / 3);
 
-	},
+    },
 
-	plane: function ( optionalTarget ) {
+    normal: function (optionalTarget) {
 
-		var result = optionalTarget || new THREE.Plane();
+        return THREE.Triangle.normal(this.a, this.b, this.c, optionalTarget);
 
-		return result.setFromCoplanarPoints( this.a, this.b, this.c );
+    },
 
-	},
+    plane: function (optionalTarget) {
 
-	barycoordFromPoint: function ( point, optionalTarget ) {
+        var result = optionalTarget || new THREE.Plane();
 
-		return THREE.Triangle.barycoordFromPoint( point, this.a, this.b, this.c, optionalTarget );
+        return result.setFromCoplanarPoints(this.a, this.b, this.c);
 
-	},
+    },
 
-	containsPoint: function ( point ) {
+    barycoordFromPoint: function (point, optionalTarget) {
 
-		return THREE.Triangle.containsPoint( point, this.a, this.b, this.c );
+        return THREE.Triangle.barycoordFromPoint(point, this.a, this.b, this.c, optionalTarget);
 
-	},
+    },
 
-	equals: function ( triangle ) {
+    containsPoint: function (point) {
 
-		return triangle.a.equals( this.a ) && triangle.b.equals( this.b ) && triangle.c.equals( this.c );
+        return THREE.Triangle.containsPoint(point, this.a, this.b, this.c);
 
-	},
+    },
 
-	clone: function () {
+    equals: function (triangle) {
 
-		return new THREE.Triangle().copy( this );
+        return triangle.a.equals(this.a) && triangle.b.equals(this.b) && triangle.c.equals(this.c);
 
-	}
+    }
+
+};
+
+// File:src/core/Channels.js
+
+/**
+ * @author mrdoob / http://mrdoob.com/
+ */
+
+THREE.Channels = function () {
+
+    this.mask = 1;
+
+};
+
+THREE.Channels.prototype = {
+
+    constructor: THREE.Channels,
+
+    set: function (channel) {
+
+        this.mask = 1 << channel;
+
+    },
+
+    enable: function (channel) {
+
+        this.mask |= 1 << channel;
+
+    },
+
+    toggle: function (channel) {
+
+        this.mask ^= 1 << channel;
+
+    },
+
+    disable: function (channel) {
+
+        this.mask &= ~(1 << channel);
+
+    }
 
 };
 
@@ -7216,72 +7299,69 @@ THREE.Triangle.prototype = {
  * @author alteredq / http://alteredqualia.com/
  */
 
-THREE.Clock = function ( autoStart ) {
+THREE.Clock = function (autoStart) {
 
-	this.autoStart = ( autoStart !== undefined ) ? autoStart : true;
+    this.autoStart = (autoStart !== undefined) ? autoStart : true;
 
-	this.startTime = 0;
-	this.oldTime = 0;
-	this.elapsedTime = 0;
+    this.startTime = 0;
+    this.oldTime = 0;
+    this.elapsedTime = 0;
 
-	this.running = false;
+    this.running = false;
 
 };
 
 THREE.Clock.prototype = {
 
-	constructor: THREE.Clock,
+    constructor: THREE.Clock,
 
-	start: function () {
+    start: function () {
 
-		this.startTime = self.performance !== undefined && self.performance.now !== undefined
-					 ? self.performance.now()
-					 : Date.now();
+        this.startTime = self.performance.now();
 
-		this.oldTime = this.startTime;
-		this.running = true;
-	},
+        this.oldTime = this.startTime;
+        this.running = true;
 
-	stop: function () {
+    },
 
-		this.getElapsedTime();
-		this.running = false;
+    stop: function () {
 
-	},
+        this.getElapsedTime();
+        this.running = false;
 
-	getElapsedTime: function () {
+    },
 
-		this.getDelta();
-		return this.elapsedTime;
+    getElapsedTime: function () {
 
-	},
+        this.getDelta();
+        return this.elapsedTime;
 
-	getDelta: function () {
+    },
 
-		var diff = 0;
+    getDelta: function () {
 
-		if ( this.autoStart && ! this.running ) {
+        var diff = 0;
 
-			this.start();
+        if (this.autoStart && !this.running) {
 
-		}
+            this.start();
 
-		if ( this.running ) {
+        }
 
-			var newTime = self.performance !== undefined && self.performance.now !== undefined
-					 ? self.performance.now()
-					 : Date.now();
+        if (this.running) {
 
-			diff = 0.001 * ( newTime - this.oldTime );
-			this.oldTime = newTime;
+            var newTime = self.performance.now();
 
-			this.elapsedTime += diff;
+            diff = 0.001 * (newTime - this.oldTime);
+            this.oldTime = newTime;
 
-		}
+            this.elapsedTime += diff;
 
-		return diff;
+        }
 
-	}
+        return diff;
+
+    }
 
 };
 
@@ -7291,107 +7371,107 @@ THREE.Clock.prototype = {
  * https://github.com/mrdoob/eventdispatcher.js/
  */
 
-THREE.EventDispatcher = function () {}
+THREE.EventDispatcher = function () { };
 
 THREE.EventDispatcher.prototype = {
 
-	constructor: THREE.EventDispatcher,
+    constructor: THREE.EventDispatcher,
 
-	apply: function ( object ) {
+    apply: function (object) {
 
-		object.addEventListener = THREE.EventDispatcher.prototype.addEventListener;
-		object.hasEventListener = THREE.EventDispatcher.prototype.hasEventListener;
-		object.removeEventListener = THREE.EventDispatcher.prototype.removeEventListener;
-		object.dispatchEvent = THREE.EventDispatcher.prototype.dispatchEvent;
+        object.addEventListener = THREE.EventDispatcher.prototype.addEventListener;
+        object.hasEventListener = THREE.EventDispatcher.prototype.hasEventListener;
+        object.removeEventListener = THREE.EventDispatcher.prototype.removeEventListener;
+        object.dispatchEvent = THREE.EventDispatcher.prototype.dispatchEvent;
 
-	},
+    },
 
-	addEventListener: function ( type, listener ) {
+    addEventListener: function (type, listener) {
 
-		if ( this._listeners === undefined ) this._listeners = {};
+        if (this._listeners === undefined) this._listeners = {};
 
-		var listeners = this._listeners;
+        var listeners = this._listeners;
 
-		if ( listeners[ type ] === undefined ) {
+        if (listeners[type] === undefined) {
 
-			listeners[ type ] = [];
+            listeners[type] = [];
 
-		}
+        }
 
-		if ( listeners[ type ].indexOf( listener ) === - 1 ) {
+        if (listeners[type].indexOf(listener) === -1) {
 
-			listeners[ type ].push( listener );
+            listeners[type].push(listener);
 
-		}
+        }
 
-	},
+    },
 
-	hasEventListener: function ( type, listener ) {
+    hasEventListener: function (type, listener) {
 
-		if ( this._listeners === undefined ) return false;
+        if (this._listeners === undefined) return false;
 
-		var listeners = this._listeners;
+        var listeners = this._listeners;
 
-		if ( listeners[ type ] !== undefined && listeners[ type ].indexOf( listener ) !== - 1 ) {
+        if (listeners[type] !== undefined && listeners[type].indexOf(listener) !== -1) {
 
-			return true;
+            return true;
 
-		}
+        }
 
-		return false;
+        return false;
 
-	},
+    },
 
-	removeEventListener: function ( type, listener ) {
+    removeEventListener: function (type, listener) {
 
-		if ( this._listeners === undefined ) return;
+        if (this._listeners === undefined) return;
 
-		var listeners = this._listeners;
-		var listenerArray = listeners[ type ];
+        var listeners = this._listeners;
+        var listenerArray = listeners[type];
 
-		if ( listenerArray !== undefined ) {
+        if (listenerArray !== undefined) {
 
-			var index = listenerArray.indexOf( listener );
+            var index = listenerArray.indexOf(listener);
 
-			if ( index !== - 1 ) {
+            if (index !== -1) {
 
-				listenerArray.splice( index, 1 );
+                listenerArray.splice(index, 1);
 
-			}
+            }
 
-		}
+        }
 
-	},
+    },
 
-	dispatchEvent: function ( event ) {
+    dispatchEvent: function (event) {
 
-		if ( this._listeners === undefined ) return;
+        if (this._listeners === undefined) return;
 
-		var listeners = this._listeners;
-		var listenerArray = listeners[ event.type ];
+        var listeners = this._listeners;
+        var listenerArray = listeners[event.type];
 
-		if ( listenerArray !== undefined ) {
+        if (listenerArray !== undefined) {
 
-			event.target = this;
+            event.target = this;
 
-			var array = [];
-			var length = listenerArray.length;
+            var array = [];
+            var length = listenerArray.length;
 
-			for ( var i = 0; i < length; i ++ ) {
+            for (var i = 0; i < length; i++) {
 
-				array[ i ] = listenerArray[ i ];
+                array[i] = listenerArray[i];
 
-			}
+            }
 
-			for ( var i = 0; i < length; i ++ ) {
+            for (var i = 0; i < length; i++) {
 
-				array[ i ].call( this, event );
+                array[i].call(this, event);
 
-			}
+            }
 
-		}
+        }
 
-	}
+    }
 
 };
 
@@ -7399,131 +7479,139 @@ THREE.EventDispatcher.prototype = {
 
 /**
  * @author mrdoob / http://mrdoob.com/
- * @author bhouston / http://exocortex.com/
+ * @author bhouston / http://clara.io/
  * @author stephomi / http://stephaneginier.com/
  */
 
-( function ( THREE ) {
+(function (THREE) {
 
-	THREE.Raycaster = function ( origin, direction, near, far ) {
+    THREE.Raycaster = function (origin, direction, near, far) {
 
-		this.ray = new THREE.Ray( origin, direction );
-		// direction is assumed to be normalized (for accurate distance calculations)
+        this.ray = new THREE.Ray(origin, direction);
+        // direction is assumed to be normalized (for accurate distance calculations)
 
-		this.near = near || 0;
-		this.far = far || Infinity;
+        this.near = near || 0;
+        this.far = far || Infinity;
 
-		this.params = {
-			Sprite: {},
-			Mesh: {},
-			PointCloud: { threshold: 1 },
-			LOD: {},
-			Line: {}
-		};
+        this.params = {
+            Mesh: {},
+            Line: {},
+            LOD: {},
+            Points: { threshold: 1 },
+            Sprite: {}
+        };
 
-	};
+        Object.defineProperties(this.params, {
+            PointCloud: {
+                get: function () {
+                    console.warn('THREE.Raycaster: params.PointCloud has been renamed to params.Points.');
+                    return this.Points;
+                }
+            }
+        });
 
-	var descSort = function ( a, b ) {
+    };
 
-		return a.distance - b.distance;
+    function descSort(a, b) {
 
-	};
+        return a.distance - b.distance;
 
-	var intersectObject = function ( object, raycaster, intersects, recursive ) {
+    }
 
-		object.raycast( raycaster, intersects );
+    function intersectObject(object, raycaster, intersects, recursive) {
 
-		if ( recursive === true ) {
+        if (object.visible === false) return;
 
-			var children = object.children;
+        object.raycast(raycaster, intersects);
 
-			for ( var i = 0, l = children.length; i < l; i ++ ) {
+        if (recursive === true) {
 
-				intersectObject( children[ i ], raycaster, intersects, true );
+            var children = object.children;
 
-			}
+            for (var i = 0, l = children.length; i < l; i++) {
 
-		}
+                intersectObject(children[i], raycaster, intersects, true);
 
-	};
+            }
 
-	//
+        }
 
-	THREE.Raycaster.prototype = {
+    }
 
-		constructor: THREE.Raycaster,
+    //
 
-		precision: 0.0001,
-		linePrecision: 1,
+    THREE.Raycaster.prototype = {
 
-		set: function ( origin, direction ) {
+        constructor: THREE.Raycaster,
 
-			// direction is assumed to be normalized (for accurate distance calculations)
+        linePrecision: 1,
 
-			this.ray.set( origin, direction );
+        set: function (origin, direction) {
 
-		},
+            // direction is assumed to be normalized (for accurate distance calculations)
 
-		setFromCamera: function ( coords, camera ) {
+            this.ray.set(origin, direction);
 
-			// camera is assumed _not_ to be a child of a transformed object
+        },
 
-			if ( camera instanceof THREE.PerspectiveCamera ) {
+        setFromCamera: function (coords, camera) {
 
-				this.ray.origin.copy( camera.position );
-				this.ray.direction.set( coords.x, coords.y, 0.5 ).unproject( camera ).sub( camera.position ).normalize();
+            if (camera instanceof THREE.PerspectiveCamera) {
 
-			} else if ( camera instanceof THREE.OrthographicCamera ) {
+                this.ray.origin.setFromMatrixPosition(camera.matrixWorld);
+                this.ray.direction.set(coords.x, coords.y, 0.5).unproject(camera).sub(this.ray.origin).normalize();
 
-				this.ray.origin.set( coords.x, coords.y, - 1 ).unproject( camera );
-				this.ray.direction.set( 0, 0, - 1 ).transformDirection( camera.matrixWorld );
+            } else if (camera instanceof THREE.OrthographicCamera) {
 
-			} else {
+                this.ray.origin.set(coords.x, coords.y, -1).unproject(camera);
+                this.ray.direction.set(0, 0, -1).transformDirection(camera.matrixWorld);
 
-				THREE.error( 'THREE.Raycaster: Unsupported camera type.' );
+            } else {
 
-			}
+                console.error('THREE.Raycaster: Unsupported camera type.');
 
-		},
+            }
 
-		intersectObject: function ( object, recursive ) {
+        },
 
-			var intersects = [];
+        intersectObject: function (object, recursive) {
 
-			intersectObject( object, this, intersects, recursive );
+            var intersects = [];
 
-			intersects.sort( descSort );
+            intersectObject(object, this, intersects, recursive);
 
-			return intersects;
+            intersects.sort(descSort);
 
-		},
+            return intersects;
 
-		intersectObjects: function ( objects, recursive ) {
+        },
 
-			var intersects = [];
+        intersectObjects: function (objects, recursive) {
 
-			if ( objects instanceof Array === false ) {
+            var intersects = [];
 
-				THREE.warn( 'THREE.Raycaster.intersectObjects: objects is not an Array.' );
-				return intersects;
+            if (Array.isArray(objects) === false) {
 
-			}
+                console.warn('THREE.Raycaster.intersectObjects: objects is not an Array.');
+                return intersects;
 
-			for ( var i = 0, l = objects.length; i < l; i ++ ) {
+            }
 
-				intersectObject( objects[ i ], this, intersects, recursive );
+            for (var i = 0, l = objects.length; i < l; i++) {
 
-			}
+                intersectObject(objects[i], this, intersects, recursive);
 
-			intersects.sort( descSort );
+            }
 
-			return intersects;
+            intersects.sort(descSort);
 
-		}
+            return intersects;
 
-	};
+        }
 
-}( THREE ) );
+    };
+
+}(THREE));
 
 // File:src/core/Object3D.js
 
@@ -32758,7 +32846,7 @@ THREE.PlaneBufferGeometry = function ( width, height, widthSegments, heightSegme
 
 	}
 
-	this.setIndex( new THREE.BufferAttribute( indices, 1 ) );
+	this.addAttribute('index', new THREE.BufferAttribute(indices, 1));
 	this.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
 	this.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
 	this.addAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );

@@ -151,6 +151,9 @@
     <Content Include="Content\css\nanumbarungothic.css" />
     <Content Include="Content\css\PagedList.css" />
     <Content Include="Content\images\common\bg_search_line.gif" />
+    <Content Include="Content\images\common\bottomShadow.png" />
+    <Content Include="Content\images\common\btn\btnArrowLeft.png" />
+    <Content Include="Content\images\common\btn\btnRightArrow.png" />
     <Content Include="Content\images\common\btn\btnThumb.gif" />
     <Content Include="Content\images\common\btn\btnThumb_over.gif" />
     <Content Include="Content\images\common\btn\btnUpFile.gif" />
@@ -187,6 +190,8 @@
     <Content Include="Content\css\NanumBarunGothic.woff" />
     <Content Include="Content\css\NanumBarunGothicBold.woff" />
     <Content Include="Content\css\layout.css.bak" />
+    <Content Include="Content\css\NanumBarunGothicLight.ttf" />
+    <Content Include="Content\css\NanumBarunGothicLight.woff" />
     <None Include="Scripts\jquery-2.2.0.intellisense.js" />
     <Content Include="Scripts\jquery-2.2.0.js" />
     <Content Include="Scripts\jquery-2.2.0.min.js" />
