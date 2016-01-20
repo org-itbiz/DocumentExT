@@ -40,7 +40,7 @@
                                 }
                                 @if (file.FileType.ToLower() == "stl")
                                 {
-                                    <a href="#none" class="viewer3d" data-file="@filePath" data-js="@jsUrl" data-ext="@file.Ext">3D View</a>
+                                    <a href="#none" class="viewer3d" data-file="@filePath" data-json="@jsUrl" data-ext="@file.Ext">3D View</a>
                                 }
 
                             </li>
@@ -127,7 +127,7 @@
             $(this).siblings('#viewer').show();
 
             //js파일 이용
-            var js = $(this).attr('data-js');
+            var json = $(this).attr('data-json');
             jQuery('html, body').animate({ scrollTop: 0 }, 300);
 
             var ThreeJsonLoader = new THREE.JSONLoader(true);
@@ -144,7 +144,7 @@
 
             thingiview = new Thingiview('viewer');
             thingiview.resize(630, 472);
-            ThreeJsonLoader.load(js, ThreeLoadCallback);
+            ThreeJsonLoader.load(json, ThreeLoadCallback);
             //여기까지
 
             ////stl파일 이용

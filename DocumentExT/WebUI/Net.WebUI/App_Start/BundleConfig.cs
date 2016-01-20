@@ -20,6 +20,7 @@ namespace Net.WebUI
 
             bundles.Add(new ScriptBundle("~/bundles/threejs").Include(
                         "~/Scripts/threejs.v71/three.js"
+                        //"~/Scripts/threejs.v71/three.min.js"
                     ));
 
             bundles.Add(new ScriptBundle("~/bundles/d3loader").Include(
