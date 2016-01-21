@@ -18,6 +18,11 @@ namespace Net.WebUI
                         "~/Scripts/jquery.unobtrusive*",
                         "~/Scripts/jquery.validate*"));
 
+            bundles.Add(new ScriptBundle("~/bundles/custom").Include(
+                        "~/Scripts/common/common.js",
+                        "~/Scripts/common/ajaxmodel.js",
+                        "~/Scripts/common/custom.js"));
+
             bundles.Add(new ScriptBundle("~/bundles/threejs").Include(
                         "~/Scripts/threejs.v71/three.min.js"
                         //"~/Scripts/threejs.v71/three.min.js"

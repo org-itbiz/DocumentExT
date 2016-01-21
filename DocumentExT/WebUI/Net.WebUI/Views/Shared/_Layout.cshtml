@@ -92,7 +92,227 @@
     <!-- //Wrap -->
     
     @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/custom")
 
     @RenderSection("scripts", required: false)
+    
+    <script type="text/javascript">
+        //로그인 아이콘 클릭
+        function chkPopup() {
+            if (loginPop("@ViewBag.LogOnChk")) return false;
+            mypageGo();
+            SetNoticeCnt();
+        }
+
+        function quickChkPopup() {
+            if (!loginPop("@ViewBag.LogOnChk")) {
+                location.href = "/profile";
+            };
+        }
+
+        function SetNoticeCnt() {
+            var onSuccess = function (result) {
+                if (result.notice > 0) {
+                    $("#profileNotice").html("알림 <img src=\"/content/images/common/notice_left.gif\" alt=\"알림\" /><span style=\"font-size: 11px; background-color: #fe7900; line-height: 22px; padding: 5px 4px 3px 4px;margin-left: -1px;\">" + result.notice + "</span><img src=\"/content/images/common/notice_right.gif\" alt=\"알림\" />");
+                    $("#profileMyPage").attr("href", "/profile?gubun=N");
+                }
+                if (result.message > 0) {
+                    $("#messageCnt").html("메시지 <img src=\"/content/images/common/notice_left.gif\" alt=\"메시지\" /><span style=\"font-size: 11px; background-color: #fe7900; line-height: 22px; padding: 5px 4px 3px 4px;margin-left: -1px;\">" + result.message + "</span><img src=\"/content/images/common/notice_right.gif\" alt=\"메시지\" />");
+                }
+            }
+            Ajax.AjaxResponseModelService(this, "/profile/GetNoticeCnt", {}, onSuccess);
+        }
+        //팔로우 기능 (atricle 디테일 페이지)
+        function SetFollowUser(val) {
+            if (!loginPop("@ViewBag.LogOnChk")) {
+
+                var data = {
+                    memberNo: val
+                }
+                var onSuccess = function (result) {
+                    if (result.Result == 1) {
+                        $("#userFollow").addClass("on");
+                    }
+                    else {
+                        $("#userFollow").removeClass("on");
+                    }
+                }
+
+                Ajax.AjaxResponseModelService(this, "/profile/SetFollow", data, onSuccess);
+            }
+        }
+
+        //팔로우 기능(다른사람 프로필 페이지 상단 우측)
+        function SetFollowUser2(val) {
+            if (!loginPop("@ViewBag.LogOnChk")) {
+
+                var data = {
+                    memberNo: val
+                }
+                var onSuccess = function (result) {
+                    if (result.Result == 1) {
+                        //$("#userFollow").addClass("on");
+                        $("#userFollow").removeClass();
+                        $("#userFollow").addClass("flwing");
+                        $("#follower").find(".cnt").text(parseInt($("#follower").find(".cnt").text(), 10) + 1);
+                    }
+                    else {
+                        //$("#userFollow").removeClass("on");
+                        $("#userFollow").removeClass();
+                        $("#userFollow").addClass("flw");
+                        $("#follower").find(".cnt").text(parseInt($("#follower").find(".cnt").text(), 10) - 1);
+                    }
+                }
+
+                Ajax.AjaxResponseModelService(this, "/profile/SetFollow", data, onSuccess);
+            }
+        }
+
+        //팔로잉 기능(팔로잉, 팔로워 페이지)
+        SetFollowInFollowPage = function (val, name) {
+            if (!loginPop("@ViewBag.LogOnChk")) {
+                var data = {
+                    memberNo: val
+                }
+                var onSuccess = function (result) {
+                    if (result.Result == 1) {
+                        $("#btnFollow_" + name).attr("src", "/content/images/common/btn/btn_following.png");
+                        if ("@ViewBag.CheckSelf" == "1") {
+                            $("#following").find(".cnt").text(parseInt($("#following").find(".cnt").text(), 10) + 1);
+                        }
+                    }
+                    else {
+                        $("#btnFollow_" + name).attr("src", "/content/images/common/btn/btn_follow.png");
+                        if ("@ViewBag.CheckSelf" == "1") {
+                            $("#following").find(".cnt").text(parseInt($("#following").find(".cnt").text(), 10) - 1);
+                        }
+                    }
+                }
+
+                Ajax.AjaxResponseModelService(this, "/profile/SetFollow", data, onSuccess);
+            }
+        }
+
+        //좋아요 기능
+        function SetLikes(val, loginChk) {
+            if (!loginPop(loginChk)) {
+                var onSuccess = function (result) {
+                    if (result.Result == 0) {
+                        $("#likeChk_" + val).text(parseInt($("#likeChk_" + val).text()) - 1);
+                        $("#likeChk_" + val).removeClass("on");
+                        if ("@ViewBag.CheckSelf" == "1") {
+                            $("#likes").find(".cnt").text(parseInt($("#likes").find(".cnt").text(), 10) - 1);
+                        }
+                    }
+                    else {
+                        $("#likeChk_" + val).text(parseInt($("#likeChk_" + val).text()) + 1);
+                        $("#likeChk_" + val).addClass("on");
+                        if ("@ViewBag.CheckSelf" == "1") {
+                            $("#likes").find(".cnt").text(parseInt($("#likes").find(".cnt").text(), 10) + 1);
+                        }
+                    }
+                    count = 0;
+                }
+                Ajax.AjaxResponseModelService(this, "/design/SetLikes", { articleNo: val }, onSuccess);
+            }
+            else {
+                count = 0;
+            }
+        }
+
+        function GoProfile() {
+            location.href = "/profile";
+        }
+
+        function GoMain() {
+            location.href = "/";
+        }
+
+        function GoPageFromTop(gubun) {
+            $("#hfGubun").val(gubun);
+            var $form_data = $("#topForm").serialize();
+
+            $("#topForm").submit();
+        }
+
+        function CleanUp() {
+            var onSuccess = function (result) {
+                if (result.Success) { alert(result.Message); }
+            }
+
+            Ajax.AjaxResponseModelService(this, "/cleanup", {}, onSuccess);
+        }
+
+        $(function () {
+
+            ////get
+            //var scrollCookie = $.cookie('scroll_loc' + window.location.href);
+
+            //if (scrollCookie != undefined) {
+            //    $(window).scrollTop(scrollCookie);
+            //}
+            ////set
+            //$(window).scroll(function () {
+            //    $.cookie('scroll_loc', $(this).scrollTop());
+            //});
+
+            $("#ArticleUpload").click(function (e) {
+                if (loginPop("@ViewBag.LogOnChk")) return false;
+                $(location).attr("href", "/design/Upload");
+            });
+
+            $("#facebook_login").click(function () {
+                var $form_data = $("#facebook_form").serialize();
+                var options = {
+                    beforeSend: function () {
+                        //alert("here");
+                    },
+                    uploadProgress: function (event, position, total, percentComplete) {
+                    },
+                    success: function (response) {
+                        if (response.Success) {
+                            console.log(response);
+                        }
+                        else {
+                            alert(response.Message);
+                        }
+                    },
+                    complete: function (response) {
+                    },
+                    error: function () {
+                    }
+                };
+
+                $('#facebook_form').ajaxForm(options).submit();
+            });
+
+
+            if ("@ViewBag.Gubun" == "") { $("#@ViewBag.CodeNo").addClass("on"); }
+
+            $('body').append('<a href="#" class="back-to-top"></a>');
+
+            $(window).scroll(function () {
+                if ($(this).scrollTop() > 250) {
+                    $('.back-to-top').fadeIn(100);
+
+                    if ($(window).scrollTop() + $(window).height() > $(document).height() - 180) {
+
+                        var marginBottom = 180 - ($(document).height() - $(window).scrollTop() - $(window).height());
+                        $(".back-to-top").css("margin-bottom", marginBottom + "px");
+
+                    } else {
+                        $(".back-to-top").css("margin-bottom", "0px");
+                    }
+                } else {
+                    $('.back-to-top').fadeOut(100);
+                }
+            });
+
+            $('.back-to-top').click(function (event) {
+                event.preventDefault();
+                $('html, body').animate({ scrollTop: 0 }, 500);
+            })
+        });
+    </script>
 </body>
 </html>

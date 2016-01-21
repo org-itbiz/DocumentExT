@@ -271,7 +271,7 @@ namespace Net.Common.Helper
         /// json 격식으로 파일 쓰기
         /// </summary>
         /// <param name="filePath"></param>
-        /// <param name="jsonContents"></param>
+        /// <param name="strBuff"></param>
         /// <returns></returns>
         public bool FileWriteAllText(string filePath, string strBuff)
         {

@@ -50,5 +50,32 @@ namespace Makersn.BizDac
                 return detailT;
             }
         }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="no"></param>
+        /// <returns></returns>
+        public ArticleT GetArticleByNo(int no)
+        {
+            using (ISession session = NHibernateHelper.OpenSession())
+            {
+                ArticleT article = session.QueryOver<ArticleT>().Where(a => a.No == no).SingleOrDefault<ArticleT>();
+                MemberT member = session.QueryOver<MemberT>().Where(w => w.No == article.MemberNo).SingleOrDefault<MemberT>();
+
+                if (string.IsNullOrEmpty(member.ProfilePic))
+                {
+                    article.MemberProfilePic = "";
+                }
+                else
+                {
+                    //article.MemberProfilePic = member.ProfilePic == null ? "facebook/" + member.FacebookPic : "thumb/" + member.ProfilePic;
+                    article.MemberProfilePic = "thumb/" + member.ProfilePic;
+                }
+                article.MemberName = member.Name;
+                return article;
+            }
+        }
     }
 }

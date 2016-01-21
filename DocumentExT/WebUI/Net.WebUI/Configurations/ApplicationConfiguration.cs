@@ -22,6 +22,10 @@ namespace Net.WebUI.Configurations
 
             CurrentDomain = ConfigurationManager.AppSettings["CurrentDomain"] ?? "http://beta.makersn.com";
             TargetDomain = ConfigurationManager.AppSettings["TargetDomain"] ?? "http://betaen.makersn.com";
+
+            /***************************************************************************************************************************************/
+            //개선
+
         }
 
         /// <summary>
@@ -74,5 +78,14 @@ namespace Net.WebUI.Configurations
         /// </summary>
         public string TargetDomain { get; private set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public string FileServer { get; private set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string FileHost { get; private set; }
     }
 }

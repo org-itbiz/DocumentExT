@@ -52,6 +52,7 @@
     <Compile Include="Helper\Modeling3DHelper.cs" />
     <Compile Include="Model\3DModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Func\UploadFunc.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
