@@ -225,7 +225,7 @@ namespace Net.WebUI.Controllers
                             string file3Dpath = string.Format("\\\\localhost\\fileupload\\{0}\\", save3DFolder);
                             string fileJSpath = string.Format("\\\\localhost\\fileupload\\{0}\\", saveJSFolder);
 
-                            _3DModel _3dModel = new Modeling3DHelper().Get3DModel(file3Dpath + fileName, extension);
+                            Object3DModel _3dModel = new Modeling3DHelper().Get3DModel(file3Dpath + fileName, extension);
 
                             //ArticleFileT sizeResult = GetSizeFor3DFile(file3Dpath + fileName, extension);
 

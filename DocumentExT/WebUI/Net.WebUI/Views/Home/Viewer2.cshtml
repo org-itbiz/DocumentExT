@@ -105,7 +105,7 @@
 
 @section Scripts{
 @Scripts.Render("~/bundles/threejs")
-@Scripts.Render("~/bundles/d3loader")
+@Scripts.Render("~/bundles/thingiview.v2")
 
     <script src="@Url.Content("~/Scripts/jquery.bxslider.min.js")"></script>
     
@@ -116,19 +116,16 @@
         //3dviewer 보이기
         $('.viewer3d').on('click', function (e) {
             e.preventDefault();
-            var thingiview = null;
 
             $('.thumb3dImg').show();
             //console.log($('.thumb3dImg'));
-            var view = $('#viewer');
-            view.find('canvas').empty();
+            var target_dom_element = $('#viewer').get(0);
             $(this).siblings('img').hide();
-            $(this).parent('li').append(view);
             $(this).siblings('#viewer').show();
 
             //js파일 이용
             var json = $(this).attr('data-json');
-            jQuery('html, body').animate({ scrollTop: 0 }, 300);
+            //jQuery('html, body').animate({ scrollTop: 0 }, 300);
 
             var ThreeJsonLoader = new THREE.JSONLoader(true);
             ThreeJsonLoader.statusDomElement.style.left = "0px";
@@ -138,50 +135,33 @@
 
             var ThreeLoadCallback = function (geometry, materials) {
                 thingiview.addModel(geometry);
-                thingiview.set
                 document.body.removeChild(ThreeJsonLoader.statusDomElement);
                 $('.thumb3dImg').hide();
             };
 
-            thingiview = new Thingiview('viewer', 630, 472);
+            //thingiview = new Thingiview('viewer');
+            //thingiview.resize(630, 472);
+            //ThreeJsonLoader.load(json, ThreeLoadCallback);
+
+
+            // parse opts
+            var argv = {};
+            var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+                argv[key] = value;
+            });
+
+            var thingiview = new Thingiview(target_dom_element, 630, 472);
+
+            if (parseInt(argv['width']) && parseInt(argv['height']))
+                thingiview.resize(parseInt(argv['width']), parseInt(argv['height']));
+
+            var animate = function () {
+                requestAnimationFrame(animate);
+                thingiview.render();
+            }
+            animate();
 
             ThreeJsonLoader.load(json, ThreeLoadCallback);
-            //여기까지
-
-            ////stl파일 이용
-            //var filePath = $(this).attr('data-file');
-            //var fileExt = $(this).attr('data-ext');
-
-            //thingiview = new Thingiview('viewer');
-
-            //thingiview.resize(630, 472);
-
-            //switch (fileExt) {
-            //    case "stl":
-            //        var stlLoader = new THREE.STLLoader();
-            //        stlLoader.load(filePath, function (geometry) {
-            //            thingiview.addModel(geometry);
-            //            $('.thumb3dImg').hide();
-            //        });
-            //        break;
-            //    case "obj":
-            //        var objTest = new THREE.OBJLoader();
-            //        objTest.load(filePath, function (geometry) {
-            //            console.log(geometry);
-            //            thingiview.addModel(geometry);
-            //            $('.thumb3dImg').hide();
-            //        });
-            //        break;
-            //}
-
-            var thingianimate = function () {
-                if (thingiview != undefined) {
-                    requestAnimationFrame(thingianimate);
-                    thingiview.render();
-                }
-            }
-            thingianimate();
-
         });
 
         function isIE() { //ie?  
@@ -190,7 +170,7 @@
             else
                 return false;
         };
-        
+
         $(document).ready(function () {
             $("#bx-pager").removeAttr("style");
             slideNumber = $("#sildeNum").val();
@@ -250,3 +230,4 @@
         })
     </script>
 }
+

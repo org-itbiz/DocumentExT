@@ -1,7 +1,13 @@
-var Thingiview = function (containerId) {
+var Thingiview = function (containerId, desired_width, desired_height) {
+    if (typeof (containerId) == 'undefined')
+        containerId = document.body;
+    if (typeof (desired_width) == 'undefined')
+        desired_width = window.innerWidth;
+    if (typeof (desired_height) == 'undefined')
+        desired_height = window.innerHeight;
 
-    this.width = window.innerWidth;
-    this.height = window.innerHeight;
+    this.width = desired_width;
+    this.height = desired_height;
     this.containerId = containerId;
     this.models = [];
     this.fogColor = 0xcacaca; // 바닥 
@@ -129,7 +135,7 @@ Thingiview.prototype.centerCamera = function () {
             sceneBox.max.z = Math.max(sceneBox.max.z, object.geometry.boundingBox.max.z);
 
             //볼륨 추가
-            Thingiview.prototype.compute_vol(object.geometry);
+            //Thingiview.prototype.compute_vol(object.geometry);
 
             if (sceneCenter === undefined)
                 newCenter = objectCenter.clone();
@@ -161,6 +167,8 @@ Thingiview.prototype.addModel = function (geometry) {  // 모델빛
         wrapRGB: new THREE.Vector3(0, 1, 1),
         color: 0xeeeeee,
         specular: 0xffffff,
+        //color: 0x0D8DFF,
+        //specular: 0xA0A0A0,
         shading: THREE.SmoothShading,
         shininess: 150,
         fog: false,
@@ -182,7 +190,7 @@ Thingiview.prototype.addModel = function (geometry) {  // 모델빛
     this.plane.scale.x = this.plane.scale.y = this.plane.scale.z = this.scale;
     this.centerCamera();
 
-    return volume;
+    //return volume;
 }
 
 Thingiview.prototype.render = function () {
@@ -213,11 +221,7 @@ Thingiview.prototype.render = function () {
             object.visible = false;
     });
     this.renderer.render(this.scene, this.camera);
-    //console.log(this.camera);
-
-    //this.getRendererData = this.renderer.domElement.toDataURL();
 }
-
 
 //볼륨 추가
 Thingiview.prototype.compute_vol = function (geo){

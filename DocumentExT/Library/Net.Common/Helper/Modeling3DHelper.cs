@@ -1,5 +1,5 @@
-﻿using Net.Common.Model;
-using Library._3DModel.OBJParser;
+﻿using Library.Object3D.OBJParser;
+using Net.Common.Model;
 using QuantumConcepts.Formats.StereoLithography;
 using System;
 using System.Collections.Generic;
@@ -21,9 +21,9 @@ namespace Net.Common.Helper
         /// <param name="filename"></param>
         /// <param name="extension"></param>
         /// <returns></returns>
-        public _3DModel Get3DModel(string filename, string extension)
+        public Object3DModel Get3DModel(string filename, string extension)
         {
-            _3DModel stlModel = new _3DModel();
+            Object3DModel stlModel = new Object3DModel();
             Metadata metadata = new Metadata();
             metadata.formatVersion = "3";
             metadata.generatedBy = "Mersh";

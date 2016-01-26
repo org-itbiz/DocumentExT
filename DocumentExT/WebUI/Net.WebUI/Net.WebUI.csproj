@@ -422,6 +422,9 @@
     <Content Include="Scripts\knockout-2.2.0.debug.js" />
     <Content Include="Scripts\knockout-2.2.0.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
+    <Content Include="Scripts\thingiview.v2\detector.js" />
+    <Content Include="Scripts\thingiview.v2\normalcontrols.js" />
+    <Content Include="Scripts\thingiview.v2\thingiview.js" />
     <Content Include="Scripts\thingiview\normalcontrols.js" />
     <Content Include="Scripts\thingiview\objloader.js" />
     <Content Include="Scripts\thingiview\stlloader.js" />
@@ -455,6 +458,7 @@
     <Content Include="Views\Design\Upload.cshtml" />
     <Content Include="Views\Design\UploadFilesView.cshtml" />
     <Content Include="Views\Design\AppendFile.cshtml" />
+    <Content Include="Views\Home\Viewer2.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -466,6 +470,10 @@
     <ProjectReference Include="..\..\DAL\DAL.csproj">
       <Project>{4226cb43-c074-47ef-8bd8-a136b098bf3f}</Project>
       <Name>DAL</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Library\Library.Object3D\Library.Object3D.csproj">
+      <Project>{4a6ba430-e008-4a40-9405-a3f164e3701e}</Project>
+      <Name>Library.Object3D</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Library\Net.Common\Net.Common.csproj">
       <Project>{a8f70b79-f1b8-4cfe-9de1-9277a4e44267}</Project>

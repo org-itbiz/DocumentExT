@@ -2,7 +2,7 @@
 
 namespace Net.Common.Model
 {
-    public class _3DModel
+    public class Object3DModel
     {
         public virtual Metadata metadata { get; set; }
         public virtual string scale { get; set; }

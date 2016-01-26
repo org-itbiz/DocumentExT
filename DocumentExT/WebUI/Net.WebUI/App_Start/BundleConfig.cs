@@ -24,16 +24,21 @@ namespace Net.WebUI
                         "~/Scripts/common/custom.js"));
 
             bundles.Add(new ScriptBundle("~/bundles/threejs").Include(
-                        "~/Scripts/threejs.v71/three.min.js"
+                        "~/Scripts/threejs.v71/three.js"
                         //"~/Scripts/threejs.v71/three.min.js"
                     ));
 
             bundles.Add(new ScriptBundle("~/bundles/d3loader").Include(
-                //"~/Scripts/three.js",
                         "~/Scripts/thingiview/thingiview.js",
-                        "~/Scripts/thingiview/normalcontrols.js",
-                        "~/Scripts/thingiview/objloader.js",
-                        "~/Scripts/thingiview/stlloader.js"
+                        "~/Scripts/thingiview/normalcontrols.js"
+                        //"~/Scripts/thingiview/objloader.js",
+                        //"~/Scripts/thingiview/stlloader.js"
+                        ));
+
+            bundles.Add(new ScriptBundle("~/bundles/thingiview.v2").Include(
+                        "~/Scripts/thingiview.v2/thingiview.js",
+                        "~/Scripts/thingiview.v2/normalcontrols.js",
+                        "~/Scripts/thingiview.v2/detector.js"
                         ));
 
             // Modernizr의 개발 버전을 사용하여 개발하고 배우십시오. 그런 다음
