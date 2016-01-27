@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text;
 
-namespace Library.Object3D.OBJParser
+namespace Library.Object3D.OBJReader
 {
     public class Face : IType
     {

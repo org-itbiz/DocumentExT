@@ -23,16 +23,14 @@ namespace Net.WebUI
                         "~/Scripts/common/ajaxmodel.js",
                         "~/Scripts/common/custom.js"));
 
-            bundles.Add(new ScriptBundle("~/bundles/threejs").Include(
-                        "~/Scripts/threejs.v71/three.js"
-                        //"~/Scripts/threejs.v71/three.min.js"
+            bundles.Add(new ScriptBundle("~/bundles/threejs_loader").Include(
+                        "~/Scripts/threejs.v71/STLLoader.js",
+                        "~/Scripts/threejs.v71/OBJLoader.js"
                     ));
 
-            bundles.Add(new ScriptBundle("~/bundles/d3loader").Include(
+            bundles.Add(new ScriptBundle("~/bundles/thingiview").Include(
                         "~/Scripts/thingiview/thingiview.js",
                         "~/Scripts/thingiview/normalcontrols.js"
-                        //"~/Scripts/thingiview/objloader.js",
-                        //"~/Scripts/thingiview/stlloader.js"
                         ));
 
             bundles.Add(new ScriptBundle("~/bundles/thingiview.v2").Include(
@@ -46,8 +44,13 @@ namespace Net.WebUI
             bundles.Add(new ScriptBundle("~/bundles/modernizr").Include(
                         "~/Scripts/modernizr-*"));
 
-            bundles.Add(new StyleBundle("~/Content/css").Include(
+            bundles.Add(new StyleBundle("~/Content/common_css").Include(
+                        "~/Content/css/layout.css",
+                        "~/Content/css/default.css",
+                        "~/Content/css/font.css",
                         "~/Content/css/common.css"));
+
+            //BundleTable.EnableOptimizations = true;
         }
     }
 }

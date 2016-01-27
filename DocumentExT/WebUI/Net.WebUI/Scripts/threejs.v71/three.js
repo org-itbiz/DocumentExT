@@ -13274,8 +13274,8 @@ THREE.Loader.prototype = {
 		var e = document.createElement( 'div' );
 
 		e.style.position = 'absolute';
-	    //e.style.right = '0px';
-	    //e.style.top = '0px';
+	    e.style.right = '0px';
+	    e.style.top = '0px';
 		e.style.fontSize = '0.8em';
 		e.style.textAlign = 'left';
 		e.style.background = 'rgba(0,0,0,0.25)';
@@ -13290,24 +13290,24 @@ THREE.Loader.prototype = {
 
 	},
 
-	//updateProgress: function ( progress ) {
+	updateProgress: function ( progress ) {
 
-	//	var message = 'Loaded ';
+		var message = 'Loaded ';
 
-	//	if ( progress.total ) {
+		if ( progress.total ) {
 
-	//		message += ( 100 * progress.loaded / progress.total ).toFixed( 0 ) + '%';
+			message += ( 100 * progress.loaded / progress.total ).toFixed( 0 ) + '%';
 
 
-	//	} else {
+		} else {
 
-	//		message += ( progress.loaded / 1024 ).toFixed( 2 ) + ' KB';
+			message += ( progress.loaded / 1024 ).toFixed( 2 ) + ' KB';
 
-	//	}
+		}
+		console.log(message);
+		this.statusDomElement.innerHTML = message;
 
-	//	this.statusDomElement.innerHTML = message;
-
-	//},
+	},
 
 	extractUrlBase: function ( url ) {
 

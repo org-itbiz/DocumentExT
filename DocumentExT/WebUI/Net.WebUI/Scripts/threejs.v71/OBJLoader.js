@@ -26,6 +26,12 @@ THREE.OBJLoader.prototype = {
 
 	},
 
+	setCrossOrigin: function ( value ) {
+
+		this.crossOrigin = value;
+
+	},
+
 	parse: function ( text ) {
 
 		console.time( 'OBJLoader' );
@@ -205,7 +211,7 @@ THREE.OBJLoader.prototype = {
 
 		// f vertex//normal vertex//normal vertex//normal ...
 
-		var face_pattern4 = /f( +(-?\d+)\/\/(-?\d+))( +(-?\d+)\/\/(-?\d+))( +(-?\d+)\/\/(-?\d+))( +(-?\d+)\/\/(-?\d+))?/
+		var face_pattern4 = /f( +(-?\d+)\/\/(-?\d+))( +(-?\d+)\/\/(-?\d+))( +(-?\d+)\/\/(-?\d+))( +(-?\d+)\/\/(-?\d+))?/;
 
 		//
 
@@ -335,22 +341,26 @@ THREE.OBJLoader.prototype = {
 		}
 
 		var container = new THREE.Object3D();
+
 		for ( var i = 0, l = objects.length; i < l; i ++ ) {
 
 			object = objects[ i ];
 			geometry = object.geometry;
 
-			console.log(geometry.normals);
 			var buffergeometry = new THREE.BufferGeometry();
 
 			buffergeometry.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( geometry.vertices ), 3 ) );
 
 			if ( geometry.normals.length > 0 ) {
+
 				buffergeometry.addAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( geometry.normals ), 3 ) );
+
 			}
 
 			if ( geometry.uvs.length > 0 ) {
+
 				buffergeometry.addAttribute( 'uv', new THREE.BufferAttribute( new Float32Array( geometry.uvs ), 2 ) );
+
 			}
 
 			material = new THREE.MeshLambertMaterial();
@@ -363,10 +373,9 @@ THREE.OBJLoader.prototype = {
 
 		}
 
-
-
 		console.timeEnd( 'OBJLoader' );
-		return buffergeometry;
+
+		return container;
 
 	}
 

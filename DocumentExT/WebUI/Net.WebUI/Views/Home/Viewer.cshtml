@@ -4,7 +4,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     IList<Makersn.Models.ArticleFileT> fileList = ViewBag.Files;
-    
+
     int index = 0;
     int setNum = 0;
     int sildeNum = 0;
@@ -104,48 +104,43 @@
 
 
 @section Scripts{
-@Scripts.Render("~/bundles/threejs")
-@Scripts.Render("~/bundles/d3loader")
+    @*@Scripts.Render("~/bundles/threejs")*@
+    <script src="@Url.VersionedContent("~/Scripts/threejs.v71/three.min.js")"></script>
+    @Scripts.Render("~/bundles/thingiview")
 
-    <script src="@Url.Content("~/Scripts/jquery.bxslider.min.js")"></script>
-    
+    <script src="@Url.VersionedContent("~/Scripts/jquery.bxslider.min.js")"></script>
     <script type="text/javascript">
-
-
 
         //3dviewer 보이기
         $('.viewer3d').on('click', function (e) {
-            e.preventDefault();
-            var thingiview = null;
+            $('html, body').animate({ scrollTop: 0 }, 300);
 
             $('.thumb3dImg').show();
-            //console.log($('.thumb3dImg'));
+            var thisLi = $(this).parent('li');
             var view = $('#viewer');
             view.find('canvas').empty();
             $(this).siblings('img').hide();
-            $(this).parent('li').append(view);
+            thisLi.append(view);
             $(this).siblings('#viewer').show();
+            var thingiview = new Thingiview('viewer', 630, 472);
 
             //js파일 이용
-            var json = $(this).attr('data-json');
-            jQuery('html, body').animate({ scrollTop: 0 }, 300);
+            var jsonFile = $(this).data('json');
+            //console.log(jsonFile);
 
             var ThreeJsonLoader = new THREE.JSONLoader(true);
-            ThreeJsonLoader.statusDomElement.style.left = "0px";
-            ThreeJsonLoader.statusDomElement.style.width = "auto";
-
-            document.body.appendChild(ThreeJsonLoader.statusDomElement);
+            var statusDom = ThreeJsonLoader.statusDomElement;
+            statusDom.style.left = "0px";
+            statusDom.style.width = "auto";
+            thisLi.append(statusDom);
 
             var ThreeLoadCallback = function (geometry, materials) {
                 thingiview.addModel(geometry);
-                thingiview.set
-                document.body.removeChild(ThreeJsonLoader.statusDomElement);
+                statusDom.style.display = "none";
                 $('.thumb3dImg').hide();
             };
 
-            thingiview = new Thingiview('viewer', 630, 472);
-
-            ThreeJsonLoader.load(json, ThreeLoadCallback);
+            ThreeJsonLoader.load(jsonFile, ThreeLoadCallback);
             //여기까지
 
             ////stl파일 이용
@@ -190,7 +185,7 @@
             else
                 return false;
         };
-        
+
         $(document).ready(function () {
             $("#bx-pager").removeAttr("style");
             slideNumber = $("#sildeNum").val();

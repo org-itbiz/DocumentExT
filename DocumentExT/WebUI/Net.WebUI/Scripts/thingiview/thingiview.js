@@ -14,9 +14,7 @@ var Thingiview = function (containerId, desired_width, desired_height) {
     this.scale = 1;
     this.init();
 
-    var mesh = null;
-    var timer = null;
-    var prevMousePos = [0, 0];
+    //var prevMousePos = [0, 0];
     var plane = null;
     var showPlane = true;
     var object = null;
@@ -32,6 +30,7 @@ Thingiview.prototype.init = function () {
     this.container.style.MozUserSelect = "none";
     this.container.style.userSelect = "none";
     this.container.innerHTML = '';
+
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(37.8, this.width / this.height, 1, 100000);
     this.camera.position.z = 300;
@@ -48,7 +47,7 @@ Thingiview.prototype.init = function () {
         fog: false,
         side: THREE.BackSide
     });
-    var skybox = new THREE.Mesh(new THREE.CubeGeometry(1000, 1000, 1000), material);
+    var skybox = new THREE.Mesh(new THREE.BoxGeometry(1000, 1000, 1000), material);
     skybox.name = 'skybox';
     this.scene.add(skybox);
     var groundPlaneMaterial = new THREE.MeshPhongMaterial({
@@ -60,11 +59,11 @@ Thingiview.prototype.init = function () {
     var y = 1000;
     var division_x = Math.floor(x / 10);
     var division_y = Math.floor(y / 10);
-    this.plane = new THREE.Mesh(new THREE.PlaneGeometry(x, y, division_x, division_y), groundPlaneMaterial);
+    this.plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(x, y, division_x, division_y), groundPlaneMaterial);
     this.plane.name = 'plane';
     this.plane.receiveShadow = true;
     this.scene.add(this.plane);
-    this.wirePlane = new THREE.Mesh(new THREE.PlaneGeometry(x, y, division_x, division_y), new THREE.MeshPhongMaterial({
+    this.wirePlane = new THREE.Mesh(new THREE.PlaneBufferGeometry(x, y, division_x, division_y), new THREE.MeshPhongMaterial({
         emissive: 0xffffff,
         color: 0x000000,
         wireframe: true,
@@ -174,7 +173,7 @@ Thingiview.prototype.addModel = function (geometry) {  // 모델빛
         fog: false,
         side: THREE.DoubleSide
     });
-    mesh = new THREE.Mesh(geometry, material);
+    var mesh = new THREE.Mesh(geometry, material);
     mesh.geometry.computeBoundingBox();
     var dims = mesh.geometry.boundingBox.max.clone().sub(mesh.geometry.boundingBox.min);
     maxDim = Math.max(Math.max(dims.x, dims.y), dims.z);
@@ -182,15 +181,24 @@ Thingiview.prototype.addModel = function (geometry) {  // 모델빛
     mesh.position.x = -(mesh.geometry.boundingBox.min.x + mesh.geometry.boundingBox.max.x) / 2 * this.scale;
     mesh.position.y = -(mesh.geometry.boundingBox.min.y + mesh.geometry.boundingBox.max.y) / 2 * this.scale;
     mesh.position.z = -mesh.geometry.boundingBox.min.z * this.scale;
+    //this.scene.face_count = mesh.geometry.faces.length;
     this.scene.add(mesh);
     this.models.push(mesh);
-    for (var i = 0; i < this.models.length; i++)
+    for (var i = 0; i < this.models.length; i++) {
         this.models[i].scale.x = this.models[i].scale.y = this.models[i].scale.z = this.scale;
+    }
     this.wirePlane.scale.x = this.wirePlane.scale.y = this.wirePlane.scale.z = this.scale;
     this.plane.scale.x = this.plane.scale.y = this.plane.scale.z = this.scale;
     this.centerCamera();
 
     //return volume;
+}
+
+Thingiview.prototype.clearScene = function () {
+    for (var i = 0; i < this.models.length; i++) {
+        this.scene.remove(this.models[i]);
+    }
+    this.models = [];
 }
 
 Thingiview.prototype.render = function () {

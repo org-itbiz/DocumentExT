@@ -4,7 +4,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     IList<Makersn.Models.ArticleFileT> fileList = ViewBag.Files;
-    
+
     int index = 0;
     int setNum = 0;
     int sildeNum = 0;
@@ -33,11 +33,10 @@
 
                                 @{if (setNum == 0)
                                   {
-                                    <div id="viewer">
-                                        @*<iframe src="#" id="viewer_frame" width="630" height="470" border="0" frameborder="0" scrolling="no"></iframe>*@
-                                    </div>
+                                    <div id="viewer"></div>
                                   }
                                 }
+
                                 @if (file.FileType.ToLower() == "stl")
                                 {
                                     <a href="#none" class="viewer3d" data-file="@filePath" data-json="@jsUrl" data-ext="@file.Ext">3D View</a>
@@ -104,28 +103,32 @@
 
 
 @section Scripts{
-@Scripts.Render("~/bundles/threejs")
-@Scripts.Render("~/bundles/thingiview.v2")
+    <script src="@Url.VersionedContent("~/Scripts/threejs.v71/three.min.js")"></script>
+    @Scripts.Render("~/bundles/threejs_loader")
+    @Scripts.Render("~/bundles/thingiview")
 
-    <script src="@Url.Content("~/Scripts/jquery.bxslider.min.js")"></script>
-    
+    <script src="@Url.VersionedContent("~/Scripts/jquery.bxslider.min.js")"></script>
+
     <script type="text/javascript">
-
-
+        var viewerLoader;
 
         //3dviewer 보이기
         $('.viewer3d').on('click', function (e) {
-            e.preventDefault();
+            //e.preventDefault();
+            $('html, body').animate({ scrollTop: 0 }, 300);
+            var thisLi = $(this).parent('li');
+            var view = $('#viewer');
 
             $('.thumb3dImg').show();
-            //console.log($('.thumb3dImg'));
-            var target_dom_element = $('#viewer').get(0);
+            thisLi.append(view);
             $(this).siblings('img').hide();
             $(this).siblings('#viewer').show();
 
+            var thingiview = new Thingiview('viewer', 630, 472);
+
+            /*
             //js파일 이용
             var json = $(this).attr('data-json');
-            //jQuery('html, body').animate({ scrollTop: 0 }, 300);
 
             var ThreeJsonLoader = new THREE.JSONLoader(true);
             ThreeJsonLoader.statusDomElement.style.left = "0px";
@@ -139,29 +142,35 @@
                 $('.thumb3dImg').hide();
             };
 
-            //thingiview = new Thingiview('viewer');
-            //thingiview.resize(630, 472);
-            //ThreeJsonLoader.load(json, ThreeLoadCallback);
-
-
-            // parse opts
-            var argv = {};
-            var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
-                argv[key] = value;
-            });
-
-            var thingiview = new Thingiview(target_dom_element, 630, 472);
-
-            if (parseInt(argv['width']) && parseInt(argv['height']))
-                thingiview.resize(parseInt(argv['width']), parseInt(argv['height']));
-
-            var animate = function () {
-                requestAnimationFrame(animate);
-                thingiview.render();
-            }
-            animate();
-
             ThreeJsonLoader.load(json, ThreeLoadCallback);
+            */
+
+            var filePath = $(this).data('file');
+            var fileExt = $(this).data('ext');
+            //console.log(fileExt);
+
+            switch (fileExt.toLowerCase()) {
+                case "stl":
+                    viewerLoader = new THREE.STLLoader();
+                    break;
+                case "obj":
+                    viewerLoader = new THREE.OBJLoader();
+                    break;
+            }
+
+            if (viewerLoader !== null) {
+                viewerLoader.load(filePath, function (geometry) {
+                    //console.log(geometry);
+                    thingiview.addModel(geometry);
+                    $('.imgDefualt').hide();
+                });
+
+                var animate = function () {
+                    requestAnimationFrame(animate);
+                    thingiview.render();
+                }
+                animate();
+            }
         });
 
         function isIE() { //ie?  
@@ -171,7 +180,7 @@
                 return false;
         };
 
-        $(document).ready(function () {
+        $(function () {
             $("#bx-pager").removeAttr("style");
             slideNumber = $("#sildeNum").val();
 
@@ -227,7 +236,7 @@
                 chrome: Browser.chk.indexOf('chrome') != -1,
                 firefox: Browser.chk.indexOf('firefox') != -1
             }
-        })
+        });
     </script>
 }
 

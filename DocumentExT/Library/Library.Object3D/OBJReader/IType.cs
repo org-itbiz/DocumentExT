@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Library.Object3D.OBJParser
+namespace Library.Object3D.OBJReader
 {
     interface IType
     {

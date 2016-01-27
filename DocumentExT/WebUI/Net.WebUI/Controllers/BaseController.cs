@@ -2,6 +2,7 @@
 using Net.WebUI.Configurations;
 using Net.WebUI.Models;
 using Newtonsoft.Json;
+using System.IO.Compression;
 using System.Web.Mvc;
 
 namespace Net.WebUI.Controllers
@@ -65,10 +66,32 @@ namespace Net.WebUI.Controllers
         /// 
         /// </summary>
         /// <param name="filterContext"></param>
-        //protected override void OnActionExecuting(ActionExecutingContext filterContext)
-        //{
-        //    //todo
-        //    base.OnActionExecuting(filterContext);
-        //}
+        protected override void OnActionExecuting(ActionExecutingContext filterContext)
+        {
+            //todo
+            filterContext.HttpContext.Response.AppendHeader("Vary", "Accept-Encoding");
+            string acceptencoding = filterContext.HttpContext.Request.Headers["Accept-Encoding"];
+
+            //if (!string.IsNullOrEmpty(acceptencoding))
+            //{
+            //    acceptencoding = acceptencoding.ToLower();
+            //    var response = filterContext.HttpContext.Response;
+
+            //    if (acceptencoding.Contains("gzip"))
+            //    {
+            //        response.AppendHeader("Content-Encoding", "gzip");
+            //        response.Filter = new GZipStream(response.Filter,
+            //                              CompressionMode.Compress);
+            //    }
+            //    else if (acceptencoding.Contains("deflate"))
+            //    {
+            //        response.AppendHeader("Content-Encoding", "deflate");
+            //        response.Filter = new DeflateStream(response.Filter,
+            //                          CompressionMode.Compress);
+            //    }
+            //}
+
+            base.OnActionExecuting(filterContext);
+        }
     }
 }

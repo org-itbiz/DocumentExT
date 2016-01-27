@@ -8,9 +8,12 @@ Thingiview.prototype.resize = function (width, height)
 { this.width = width; this.height = height; this.camera.aspect = width / height; this.camera.updateProjectionMatrix(); this.renderer.setSize(width, height); }
 Thingiview.prototype._init = function (dom_element) {
     this.container = document.createElement('div'); this.container.style.width = this.width + "px";
-    this.container.style.height = this.height + "px"; this.container.style.WebkitTouchCallout = "none";
-    this.container.style.WebkitUserSelect = "none"; this.container.style.KhtmlUserSelect = "none";
-    this.container.style.MozUserSelect = "none"; this.container.style.userSelect = "none";
+    this.container.style.height = this.height + "px";
+    this.container.style.WebkitTouchCallout = "none";
+    this.container.style.WebkitUserSelect = "none";
+    this.container.style.KhtmlUserSelect = "none";
+    this.container.style.MozUserSelect = "none";
+    this.container.style.userSelect = "none";
     this.container.style.display = "none";
     this.container.style.backgroundColor = "#" + this.fogColor.toString(16);
     //this.parent_element.appendChild(this.container);
@@ -105,23 +108,46 @@ Thingiview.prototype.addModel = function (geometry) {
         shininess: 150,
         fog: false,
         side: THREE.DoubleSide
-    }); var mesh = new THREE.Mesh(geometry, material); mesh.geometry.computeBoundingBox();
+    });
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.geometry.computeBoundingBox();
     var dims = mesh.geometry.boundingBox.max.clone().sub(mesh.geometry.boundingBox.min);
     maxDim = Math.max(Math.max(dims.x, dims.y), dims.z);
     this.scale = 100 / maxDim;
     mesh.position.x = -(mesh.geometry.boundingBox.min.x + mesh.geometry.boundingBox.max.x) / 2 * this.scale;
     mesh.position.y = -(mesh.geometry.boundingBox.min.y + mesh.geometry.boundingBox.max.y) / 2 * this.scale;
-    mesh.position.z = -mesh.geometry.boundingBox.min.z * this.scale; this.scene.face_count = mesh.geometry.faces.length; this.scene.add(mesh);
-    this.models.push(mesh); for (var i = 0; i < this.models.length; i++)
-        this.models[i].scale.x = this.models[i].scale.y = this.models[i].scale.z = this.scale; this.wirePlane.scale.x = this.wirePlane.scale.y = this.wirePlane.scale.z = this.scale; this.plane.scale.x = this.plane.scale.y = this.plane.scale.z = this.scale; this.centerCamera();
+    mesh.position.z = -mesh.geometry.boundingBox.min.z * this.scale;
+    //this.scene.face_count = mesh.geometry.faces.length;
+    this.scene.add(mesh);
+    this.models.push(mesh);
+    for (var i = 0; i < this.models.length; i++) {
+        this.models[i].scale.x = this.models[i].scale.y = this.models[i].scale.z = this.scale;
+    }
+    this.wirePlane.scale.x = this.wirePlane.scale.y = this.wirePlane.scale.z = this.scale;
+    this.plane.scale.x = this.plane.scale.y = this.plane.scale.z = this.scale;
+    this.centerCamera();
 }
+
 Thingiview.prototype.clearScene = function () {
     for (var i = 0; i < this.models.length; i++)
-    { this.scene.remove(this.models[i]); }
+    {
+        this.scene.remove(this.models[i]);
+    }
     this.models = [];
 }
 Thingiview.prototype.loadModelJson = function (url)
-{ var loader = new THREE.JSONLoader(true); loader.statusDomElement.style.left = "0px"; loader.statusDomElement.style.width = "auto"; this.parent_element.appendChild(loader.statusDomElement); var self = this; loadCallback = function (geometry, materials) { self.addModel(geometry); self.parent_element.removeChild(loader.statusDomElement); }; loader.load(url, loadCallback); }
+{
+    var loader = new THREE.JSONLoader(true);
+    loader.statusDomElement.style.left = "0px";
+    loader.statusDomElement.style.width = "auto";
+    this.parent_element.appendChild(loader.statusDomElement);
+    var self = this;
+    loadCallback = function (geometry, materials)
+    {
+        self.addModel(geometry);
+        self.parent_element.removeChild(loader.statusDomElement);
+    }; loader.load(url, loadCallback);
+}
 Thingiview.prototype.render = function () {
     if (!this.visible)
         return; var now = Date.now(); if (this.lastRenderTime == undefined)

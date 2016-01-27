@@ -1,4 +1,4 @@
-﻿using Library.Object3D.OBJParser;
+﻿using Library.Object3D.OBJReader;
 using Net.Common.Model;
 using QuantumConcepts.Formats.StereoLithography;
 using System;

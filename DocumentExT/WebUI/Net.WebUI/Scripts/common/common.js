@@ -2,6 +2,10 @@ var mypageIndex = 0;
 
 $(function () {
 
+    $("img").one("error", function (e) {
+        $(this).attr("src", "/Content/images/default3d.png");
+    });
+
     $('#stx').focus(function () {
         $('.line').addClass('on');
         $("._search_btn").addClass('on');

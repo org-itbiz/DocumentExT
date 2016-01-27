@@ -1,4 +1,5 @@
-﻿using Makersn.BizDac;
+﻿using log4net;
+using Makersn.BizDac;
 using Makersn.Models;
 using Net.Common.Filter;
 using System;
@@ -87,6 +88,10 @@ namespace Net.WebUI.Controllers
         /// <returns></returns>
         public ActionResult Viewer2(string no = "", string goReply = "N")
         {
+            //ILog log = LogManager.GetLogger("APP");
+            //log.Info("Viewer2_inof");
+            //log.Warn("Viewer2_err");
+
             int articleNo = 0;
             var visitorNo = profileModel.UserNo;
             ViewBag.GoReply = goReply;
