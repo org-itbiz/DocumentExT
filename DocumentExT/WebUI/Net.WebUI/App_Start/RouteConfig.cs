@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Net.Common.Routing;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -12,6 +13,14 @@ namespace Net.WebUI
         public static void RegisterRoutes(RouteCollection routes)
         {
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
+
+            routes.Add(new CatalogUrlProvider());
+
+            //routes.MapRoute(
+            //    name: "Catalog",
+            //    url: "design/{CatalogNo}",
+            //    defaults: new { controller = "Catalog", action = "ShowDesigns", no = UrlParameter.Optional }
+            //);
 
             routes.MapRoute(
                 name: "Default",

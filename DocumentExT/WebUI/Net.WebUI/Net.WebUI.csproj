@@ -138,12 +138,15 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Configurations\ApplicationConfiguration.cs" />
     <Compile Include="Controllers\BaseController.cs" />
+    <Compile Include="Controllers\CatalogController.cs" />
     <Compile Include="Controllers\DesignController.cs" />
+    <Compile Include="Controllers\ErrorController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Helper\UrlHelperExtensions.cs" />
+    <Compile Include="Models\AjaxMsgModel.cs" />
     <Compile Include="Models\AjaxResponseModel.cs" />
     <Compile Include="Models\ProfileModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -417,6 +420,7 @@
     <Content Include="Scripts\jquery.form.min.js.map" />
     <None Include="Scripts\jquery.validate-vsdoc.js" />
     <Content Include="Scripts\jquery.bxslider.min.js" />
+    <Content Include="Scripts\jquery.msgProcess.js" />
     <Content Include="Scripts\jquery.unobtrusive-ajax.js" />
     <Content Include="Scripts\jquery.unobtrusive-ajax.min.js" />
     <Content Include="Scripts\jquery.validate.js" />
@@ -442,7 +446,9 @@
     <Content Include="Scripts\uploader\dmuploader.js" />
     <Content Include="Scripts\uploader\dmuploader.min.js" />
     <Content Include="Scripts\_references.js" />
-    <Content Include="Web.config" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </Content>
@@ -464,6 +470,9 @@
     <Content Include="Views\Design\UploadFilesView.cshtml" />
     <Content Include="Views\Design\AppendFile.cshtml" />
     <Content Include="Views\Home\Viewer2.cshtml" />
+    <Content Include="Views\Error\Error404.cshtml" />
+    <Content Include="Views\Error\Error500.cshtml" />
+    <Content Include="Views\Catalog\ShowDesigns.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

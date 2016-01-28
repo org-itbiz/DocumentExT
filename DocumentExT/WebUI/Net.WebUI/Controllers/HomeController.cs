@@ -1,11 +1,9 @@
-﻿using log4net;
-using Makersn.BizDac;
+﻿using Makersn.BizDac;
 using Makersn.Models;
 using Net.Common.Filter;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web.Mvc;
 
 namespace Net.WebUI.Controllers
@@ -19,9 +17,24 @@ namespace Net.WebUI.Controllers
         /// 
         /// </summary>
         /// <returns></returns>
-        public ActionResult Index()
+        public async Task<ActionResult> Index()
         {
-            return View();
+            var responseHtml = await GetResponseContentAsync("http://www.baidu.com");
+            return Content(responseHtml);
+        }
+
+        private async Task<string> GetResponseContentAsync(string url)
+        {
+            var httpClient = new System.Net.Http.HttpClient();
+            var response = await httpClient.GetAsync(url);
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return await response.Content.ReadAsStringAsync();
+            }
+            else
+            {
+                return "error";
+            }
         }
 
         /// <summary>

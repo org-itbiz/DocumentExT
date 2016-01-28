@@ -69,8 +69,7 @@ namespace Net.WebUI.Controllers
         protected override void OnActionExecuting(ActionExecutingContext filterContext)
         {
             //todo
-            filterContext.HttpContext.Response.AppendHeader("Vary", "Accept-Encoding");
-            string acceptencoding = filterContext.HttpContext.Request.Headers["Accept-Encoding"];
+            //string acceptencoding = filterContext.HttpContext.Request.Headers["Accept-Encoding"];
 
             //if (!string.IsNullOrEmpty(acceptencoding))
             //{
