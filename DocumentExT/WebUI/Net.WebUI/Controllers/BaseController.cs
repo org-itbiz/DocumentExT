@@ -1,5 +1,5 @@
 ﻿using Makersn.BizDac;
-using Net.WebUI.Configurations;
+using Net.Common.Configurations;
 using Net.WebUI.Models;
 using Newtonsoft.Json;
 using System.IO.Compression;
@@ -9,10 +9,9 @@ namespace Net.WebUI.Controllers
 {
     public class BaseController : Controller
     {
-        public ApplicationConfiguration instance = ApplicationConfiguration.Instance;
+        //public ApplicationConfiguration instance = ApplicationConfiguration.Instance;
 
         public ProfileModel profileModel;
-
 
         public BaseController()
         {
@@ -21,15 +20,15 @@ namespace Net.WebUI.Controllers
             ViewBag.LogOnMemner = profileModel;
             ViewBag.LogOnChk = profileModel.UserNo == 0 ? 0 : 1;
 
-            ViewBag.ProfileImgUrl = instance.ProfileImgUrl;
-            ViewBag.ArticleImgUrl = instance.ArticleImgUrl;
-            ViewBag.Article3DUrl = instance.Article3DUrl;
-            ViewBag.ArticleJsUrl = instance.Article3DJsUrl;
-            ViewBag.AdminImgUrl = instance.AdminImgUrl;
-            ViewBag.PrintImgUrl = instance.PrinterImgUrl;
+            //ViewBag.ProfileImgUrl = instance.ProfileImgUrl;
+            //ViewBag.ArticleImgUrl = instance.ArticleImgUrl;
+            //ViewBag.Article3DUrl = instance.Article3DUrl;
+            //ViewBag.ArticleJsUrl = instance.Article3DJsUrl;
+            //ViewBag.AdminImgUrl = instance.AdminImgUrl;
+            //ViewBag.PrintImgUrl = instance.PrinterImgUrl;
 
-            ViewBag.CurrentDomain = instance.CurrentDomain;
-            ViewBag.TargetDomain = instance.TargetDomain;
+            //ViewBag.CurrentDomain = instance.CurrentDomain;
+            //ViewBag.TargetDomain = instance.TargetDomain;
             ViewBag.LangFlag = System.Configuration.ConfigurationManager.AppSettings["LangFlag"];
             ViewBag.LangFlagName = ViewBag.LangFlag == "KR" ? "한국어" : ViewBag.LangFlag == "EN" ? "English" : "";
 

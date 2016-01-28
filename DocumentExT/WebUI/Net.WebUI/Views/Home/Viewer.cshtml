@@ -24,12 +24,9 @@
                         @foreach (Makersn.Models.ArticleFileT file in fileList)
                         {
                             file.ImgName = file.ImgName != null ? file.ImgName : file.Rename;
-
-                            string ImgPath = ViewBag.ArticleImgUrl + file.ImgName;
-                            string filePath = ViewBag.Article3DUrl + file.Rename;
-                            string jsUrl = ViewBag.ArticleJsUrl + file.Rename + ".json";
+                            
                             <li style="display: none">
-                                <img class="lazy-load" src="@ImgPath" />
+                                <img class="lazy-load" src="@Url.DesignImgFile(file.ImgName)" />
 
                                 @{if (setNum == 0)
                                   {
@@ -40,7 +37,7 @@
                                 }
                                 @if (file.FileType.ToLower() == "stl")
                                 {
-                                    <a href="#none" class="viewer3d" data-file="@filePath" data-json="@jsUrl" data-ext="@file.Ext">3D View</a>
+                                    <a href="#none" class="viewer3d" data-file="@Url.Design3DFile(file.Rename)" data-json="@Url.DesignJsonFile(file.Rename + ".json")" data-ext="@file.Ext">3D View</a>
                                 }
 
                             </li>
@@ -61,12 +58,11 @@
 
                 <div class="thumbArea">
                     <div id="bx-pager" style="display: none">
-                        @foreach (Makersn.Models.ArticleFileT file in ViewBag.Files)
+                        @foreach (Makersn.Models.ArticleFileT file in fileList)
                         {
-                            string ThumbImgPath = ViewBag.ArticleImgUrl + file.ImgName;
                             <a data-slide-index="@index" href="javascript:void(0);">
                                 @*<img class="lazy-load" data-original="@ThumbImgPath" />*@
-                                <img src="@ThumbImgPath" />
+                                <img src="@Url.DesignImgFile(file.ImgName)" />
                             </a>
                             index++;
                         }

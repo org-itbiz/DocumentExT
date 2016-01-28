@@ -136,7 +136,6 @@
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
-    <Compile Include="Configurations\ApplicationConfiguration.cs" />
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\CatalogController.cs" />
     <Compile Include="Controllers\DesignController.cs" />
@@ -145,7 +144,6 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Helper\UrlHelperExtensions.cs" />
     <Compile Include="Models\AjaxMsgModel.cs" />
     <Compile Include="Models\AjaxResponseModel.cs" />
     <Compile Include="Models\ProfileModel.cs" />
@@ -476,6 +474,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Helper\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />

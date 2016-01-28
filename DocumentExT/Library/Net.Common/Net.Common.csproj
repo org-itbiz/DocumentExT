@@ -32,6 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Web" />
@@ -43,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configurations\ApplicationConfiguration.cs" />
     <Compile Include="Filter\HtmlFilter.cs" />
     <Compile Include="Helper\Base64Helper.cs" />
     <Compile Include="Helper\DateTimeHelper.cs" />
@@ -50,6 +52,7 @@
     <Compile Include="Helper\IPAddressHelper.cs" />
     <Compile Include="Helper\IPScanner.cs" />
     <Compile Include="Helper\Modeling3DHelper.cs" />
+    <Compile Include="Helper\UrlHelperExtensions.cs" />
     <Compile Include="Model\CatalogModel.cs" />
     <Compile Include="Model\Object3DModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
