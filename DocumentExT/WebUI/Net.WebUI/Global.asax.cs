@@ -64,7 +64,16 @@ namespace Net.WebUI
         //    }
         //}
 
-        void RemoveWebFormEngines()
+        protected void Application_EndRequest(object sender, EventArgs e)
+        {
+            //foreach (var item in this.Context.Items.Values)
+            //{
+            //    var disposableObj = item as IDisposable;
+            //    if (disposableObj != null) disposableObj.Dispose();
+            //}
+        }
+
+        protected void RemoveWebFormEngines()
         {
             var viewEngines = ViewEngines.Engines;
             var webFormEngines = viewEngines.OfType<WebFormViewEngine>().FirstOrDefault();

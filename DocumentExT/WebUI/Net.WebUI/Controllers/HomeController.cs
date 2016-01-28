@@ -1,7 +1,10 @@
-﻿using Makersn.BizDac;
+﻿using Doc.BizDac.Biz;
+using Doc.Data.Model;
+using Makersn.BizDac;
 using Makersn.Models;
 using Net.Common.Filter;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Mvc;
@@ -19,6 +22,7 @@ namespace Net.WebUI.Controllers
         /// <returns></returns>
         public async Task<ActionResult> Index()
         {
+            //IList<StoreProductT> test = new StoreProductBiz().GetAllStoreProducts();
             var responseHtml = await GetResponseContentAsync("http://www.baidu.com");
             return Content(responseHtml);
         }

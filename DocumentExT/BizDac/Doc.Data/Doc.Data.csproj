@@ -30,8 +30,48 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Dache.Client, Version=1.5.9.40217, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Dache.Client.1.5.9\lib\Dache.Client.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Dache.Core, Version=1.5.9.40216, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Dache.Client.1.5.9\lib\Dache.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EFCache, Version=1.0.0.0, Culture=neutral, PublicKeyToken=46c4868af4307d2c, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\EntityFramework.Cache.1.0.0\lib\net45\EFCache.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.8.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="protobuf-net, Version=2.0.0.668, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\protobuf-net.2.0.0.668\lib\net40\protobuf-net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SharpMemoryCache, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\SharpMemoryCache.1.0.0\lib\SharpMemoryCache.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SimplSockets, Version=1.4.5.38015, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\SimplSockets.1.4.5\lib\SimplSockets.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -39,7 +79,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Cache\CacheEntry.cs" />
+    <Compile Include="Cache\CacheProvider.cs" />
+    <Compile Include="AppDbConfiguration.cs" />
+    <Compile Include="Cache\DacheCacheProvider.cs" />
+    <Compile Include="Cache\DacheCachingPolicy.cs" />
+    <Compile Include="AppDbContext.cs" />
+    <Compile Include="Model\StoreProductExT_T.cs" />
+    <Compile Include="Model\StoreProductT.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

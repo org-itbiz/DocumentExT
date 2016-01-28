@@ -480,6 +480,14 @@
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\BizDac\Doc.BizDac\Doc.BizDac.csproj">
+      <Project>{0e03cd69-7866-4db2-a97f-c67e4c7169a2}</Project>
+      <Name>Doc.BizDac</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\BizDac\Doc.Data\Doc.Data.csproj">
+      <Project>{6ea79c61-c3e1-430d-b64f-79062bc54bac}</Project>
+      <Name>Doc.Data</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\DAL\DAL.csproj">
       <Project>{4226cb43-c074-47ef-8bd8-a136b098bf3f}</Project>
       <Name>DAL</Name>
